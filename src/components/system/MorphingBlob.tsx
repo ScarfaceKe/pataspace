@@ -3,28 +3,96 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * MorphingBlob — An organic blob shape that continuously morphs
- * and changes form. Liquid-like, premium, hypnotic.
- *
- * Use for: initial site load, first-time visitor experience.
+ * MorphingBlob — A smooth organic blob shape that continuously morphs.
+ * Uses cubic Bezier curves between polar-coordinate control points
+ * for true smoothness (no polygon edges or "scratches").
  *
  * Props:
  *   message — optional loading message
  *   size — blob size in px (default 200)
- *   color — blob color (default teal)
  */
 
 interface MorphingBlobProps {
   message?: string;
   size?: number;
-  color?: string;
   className?: string;
+}
+
+/**
+ * Attempt a cubic Bezier through a set of polar points.
+ * Uses Catmull-Rom → Bezier conversion for natural smooth curves.
+ */
+function catmullRomToBezier(
+  ctx: CanvasRenderingContext2D,
+  points: { x: number; y: number }[],
+) {
+  const n = points.length;
+  if (n < 3) return;
+
+  ctx.beginPath();
+
+  for (let i = 0; i < n; i++) {
+    const p0 = points[(i - 1 + n) % n];
+    const p1 = points[i];
+    const p2 = points[(i + 1) % n];
+    const p3 = points[(i + 2) % n];
+
+    // Catmull-Rom to cubic Bezier control points
+    const tension = 6; // higher = tighter curves, less wobble
+    const cp1x = p1.x + (p2.x - p0.x) / tension;
+    const cp1y = p1.y + (p2.y - p0.y) / tension;
+    const cp2x = p2.x - (p3.x - p1.x) / tension;
+    const cp2y = p2.y - (p3.y - p1.y) / tension;
+
+    if (i === 0) {
+      ctx.moveTo(p1.x, p1.y);
+    }
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+  }
+
+  ctx.closePath();
+}
+
+/**
+ * Compute the blob radius at a given angle using layered sine waves.
+ * Multiple frequencies create organic, living movement.
+ */
+function blobRadius(angle: number, t: number, base: number): number {
+  return (
+    base +
+    Math.sin(angle * 2 + t * 0.7) * (base * 0.14) +
+    Math.sin(angle * 3 - t * 0.5) * (base * 0.10) +
+    Math.cos(angle * 4 + t * 0.9) * (base * 0.07) +
+    Math.sin(angle * 5 - t * 0.3) * (base * 0.05) +
+    Math.cos(angle * 6 + t * 0.6) * (base * 0.03)
+  );
+}
+
+/**
+ * Generate smooth blob points at a given time.
+ */
+function generateBlobPoints(
+  cx: number,
+  cy: number,
+  baseRadius: number,
+  t: number,
+  numPoints: number,
+): { x: number; y: number }[] {
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2;
+    const r = blobRadius(angle, t, baseRadius);
+    pts.push({
+      x: cx + Math.cos(angle) * r,
+      y: cy + Math.sin(angle) * r,
+    });
+  }
+  return pts;
 }
 
 export function MorphingBlob({
   message = 'Preparing PataSpace...',
   size = 200,
-  color = '#10b981',
   className = '',
 }: MorphingBlobProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -38,84 +106,77 @@ export function MorphingBlob({
     let running = true;
     let animFrame = 0;
     let time = 0;
+    let lastFrame = 0;
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas!.width = size * dpr;
       canvas!.height = size * dpr;
-      ctx!.scale(dpr, dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    /**
-     * Draw a morphing blob using polar coordinates with noise.
-     * The shape is defined by a radius function r(θ) that varies over time.
-     */
-    function drawBlob(cx: number, cy: number, baseRadius: number, t: number) {
-      const points = 128;
-      ctx!.beginPath();
-
-      for (let i = 0; i <= points; i++) {
-        const angle = (i / points) * Math.PI * 2;
-
-        // Multiple sine waves at different frequencies create organic morphing
-        const r =
-          baseRadius +
-          Math.sin(angle * 3 + t * 0.8) * (baseRadius * 0.12) +
-          Math.sin(angle * 5 - t * 0.6) * (baseRadius * 0.08) +
-          Math.cos(angle * 2 + t * 1.1) * (baseRadius * 0.1) +
-          Math.sin(angle * 7 + t * 0.4) * (baseRadius * 0.05);
-
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
-
-        if (i === 0) ctx!.moveTo(x, y);
-        else ctx!.lineTo(x, y);
-      }
-
-      ctx!.closePath();
-    }
-
-    function render() {
+    function render(timestamp: number) {
       if (!running || !ctx || !canvas) return;
 
-      time += 0.012;
+      // Throttle to ~30fps for smoothness without jank
+      if (timestamp - lastFrame < 33) {
+        animFrame = requestAnimationFrame(render);
+        return;
+      }
+      lastFrame = timestamp;
+
+      time += 0.014; // smooth, slow morph speed
       const s = size;
       const cx = s / 2;
       const cy = s / 2;
       const baseRadius = s * 0.3;
+      const numPoints = 48; // enough for smooth curves, not too many
 
       ctx.clearRect(0, 0, s, s);
 
-      // Draw multiple layers for depth
-      for (let layer = 3; layer >= 0; layer--) {
-        const layerOffset = layer * 0.5;
-        const layerAlpha = 0.08 + (3 - layer) * 0.06;
-        const layerRadius = baseRadius + layer * (baseRadius * 0.08);
-
-        drawBlob(cx, cy, layerRadius, time + layerOffset);
-
-        // Gradient fill
-        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, layerRadius * 1.5);
-        gradient.addColorStop(0, `rgba(16, 185, 129, ${layerAlpha + 0.1})`);
-        gradient.addColorStop(0.6, `rgba(16, 185, 129, ${layerAlpha})`);
-        gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-        ctx.fillStyle = gradient;
-        ctx.fill();
-      }
-
-      // Inner bright core
-      drawBlob(cx, cy, baseRadius * 0.6, time * 1.3);
-      const coreGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius * 0.6);
-      coreGradient.addColorStop(0, 'rgba(52, 211, 153, 0.3)');
-      coreGradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
-      ctx.fillStyle = coreGradient;
+      // --- Layer 1: Outer glow (largest, most transparent) ---
+      const outerPts = generateBlobPoints(cx, cy, baseRadius * 1.25, time - 0.8, numPoints);
+      catmullRomToBezier(ctx, outerPts);
+      const outerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius * 1.6);
+      outerGrad.addColorStop(0, 'rgba(16, 185, 129, 0.08)');
+      outerGrad.addColorStop(0.7, 'rgba(16, 185, 129, 0.04)');
+      outerGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      ctx.fillStyle = outerGrad;
       ctx.fill();
 
-      // Thin stroke on outermost blob
-      drawBlob(cx, cy, baseRadius, time);
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.15)';
-      ctx.lineWidth = 1;
+      // --- Layer 2: Middle body ---
+      const midPts = generateBlobPoints(cx, cy, baseRadius * 1.05, time - 0.3, numPoints);
+      catmullRomToBezier(ctx, midPts);
+      const midGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius * 1.3);
+      midGrad.addColorStop(0, 'rgba(16, 185, 129, 0.18)');
+      midGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.10)');
+      midGrad.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+      ctx.fillStyle = midGrad;
+      ctx.fill();
+
+      // --- Layer 3: Inner body (brightest) ---
+      const innerPts = generateBlobPoints(cx, cy, baseRadius * 0.85, time, numPoints);
+      catmullRomToBezier(ctx, innerPts);
+      const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius);
+      innerGrad.addColorStop(0, 'rgba(52, 211, 153, 0.30)');
+      innerGrad.addColorStop(0.4, 'rgba(16, 185, 129, 0.18)');
+      innerGrad.addColorStop(1, 'rgba(16, 185, 129, 0.03)');
+      ctx.fillStyle = innerGrad;
+      ctx.fill();
+
+      // --- Layer 4: Bright core (smallest, fastest morph) ---
+      const corePts = generateBlobPoints(cx, cy, baseRadius * 0.45, time * 1.4, numPoints);
+      catmullRomToBezier(ctx, corePts);
+      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius * 0.5);
+      coreGrad.addColorStop(0, 'rgba(110, 231, 183, 0.25)');
+      coreGrad.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+      ctx.fillStyle = coreGrad;
+      ctx.fill();
+
+      // --- Thin glowing stroke on main body ---
+      catmullRomToBezier(ctx, innerPts);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.12)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       animFrame = requestAnimationFrame(render);
