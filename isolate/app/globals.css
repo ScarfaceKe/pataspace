@@ -2784,3 +2784,750 @@ html.lenis, html.lenis body { height: auto; }
   .hero-glow-orb { animation: none; }
   .premium-footer::before { animation: none; }
 }
+
+/* ========================================================
+   LANDING PAGE RICH CONTENT — How It Works, Featured, Testimonials
+   ======================================================== */
+
+/* --- Section flow glow (atmospheric separator between sections) --- */
+.section-flow-glow {
+  position: relative;
+  height: 4px;
+  margin: 0;
+  background: linear-gradient(90deg, transparent, var(--premium-accent), var(--brand), transparent);
+  opacity: 0.15;
+  border-radius: 9999px;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+.section-flow-glow-top {
+  margin-bottom: 2rem;
+  margin-top: -1rem;
+}
+
+/* --- How It Works section --- */
+.how-it-works-section {
+  position: relative;
+  background: linear-gradient(180deg, var(--bg) 0%, rgba(240, 250, 247, 0.5) 100%);
+}
+
+.how-it-works-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .how-it-works-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.how-it-works-card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--premium-radius);
+  padding: 2rem 1.5rem;
+  background: #fff;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+.how-it-works-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--premium-accent));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.how-it-works-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(15, 118, 110, 0.2);
+  box-shadow: 0 20px 48px rgba(11, 63, 58, 0.12);
+}
+
+.how-it-works-card:hover::before {
+  opacity: 1;
+}
+
+.how-it-works-number {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-size: 3rem;
+  font-weight: 900;
+  color: rgba(15, 118, 110, 0.06);
+  line-height: 1;
+  user-select: none;
+}
+
+.how-it-works-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.how-it-works-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.how-it-works-card p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.how-it-works-detail {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  background: var(--surface-strong);
+  color: var(--brand-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* --- Connector dots between steps (desktop only) --- */
+.how-it-works-connector {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .how-it-works-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-top: 1.5rem;
+    padding: 0 10%;
+  }
+
+  .connector-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand);
+    opacity: 0.4;
+  }
+
+  .connector-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--brand), rgba(15, 118, 110, 0.2), var(--brand));
+    opacity: 0.3;
+  }
+}
+
+/* --- Featured Properties section --- */
+.featured-section {
+  position: relative;
+}
+
+.featured-properties-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .featured-properties-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .featured-properties-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.featured-property-card {
+  border: 1px solid var(--line);
+  border-radius: var(--premium-radius);
+  padding: 1.5rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.featured-property-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--premium-accent));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.featured-property-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(15, 118, 110, 0.2);
+  box-shadow: 0 16px 40px rgba(11, 63, 58, 0.12);
+}
+
+.featured-property-card:hover::after {
+  opacity: 1;
+}
+
+.featured-property-card.is-hot {
+  border-color: rgba(16, 185, 129, 0.25);
+  background: linear-gradient(180deg, rgba(240, 250, 247, 0.3), #fff);
+}
+
+.featured-property-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.featured-property-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: var(--surface-strong);
+  color: var(--brand-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.featured-property-hot {
+  display: inline-flex;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.featured-property-verified {
+  display: inline-flex;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: var(--premium-accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.featured-property-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.featured-property-location {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.featured-property-price {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--brand-dark);
+  letter-spacing: -0.02em;
+}
+
+.featured-property-deposit {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.featured-property-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+.featured-property-features span {
+  display: inline-flex;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+}
+
+.featured-property-cta {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.featured-see-all {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* --- Testimonials section --- */
+.testimonials-section {
+  background: linear-gradient(180deg, rgba(240, 250, 247, 0.3) 0%, var(--bg) 100%);
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.testimonial-card {
+  border: 1px solid var(--line);
+  border-radius: var(--premium-radius);
+  padding: 1.5rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(15, 118, 110, 0.2);
+  box-shadow: 0 16px 40px rgba(11, 63, 58, 0.1);
+}
+
+.testimonial-stars {
+  color: #f59e0b;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.testimonial-text {
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  margin: 0;
+  flex: 1;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.testimonial-avatar {
+  font-size: 2rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--surface-strong);
+  flex-shrink: 0;
+}
+
+.testimonial-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.testimonial-role {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* --- Locations section --- */
+.locations-section {
+  position: relative;
+}
+
+/* --- Trust section --- */
+.trust-section {
+  background: linear-gradient(180deg, var(--bg) 0%, rgba(240, 250, 247, 0.4) 100%);
+}
+
+/* --- Tighter spacing between all premium sections --- */
+.premium-section {
+  padding-block: clamp(2rem, 6vw, 5rem);
+}
+
+.premium-section + .premium-section-dark,
+.premium-section-dark + .premium-section {
+  margin-top: 0;
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .how-it-works-card,
+  .featured-property-card,
+  .testimonial-card {
+    transition: none;
+  }
+
+  .how-it-works-card:hover,
+  .featured-property-card:hover,
+  .testimonial-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ========================================================
+   ALIVE BACKGROUND — Every Section Feels Living
+   ======================================================== */
+
+/* --- Body: animated gradient that shifts with time --- */
+body {
+  background:
+    radial-gradient(ellipse 120% 60% at 10% 5%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 40% at 90% 30%, rgba(15, 118, 110, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse 60% 50% at 50% 90%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+    var(--bg);
+  background-attachment: fixed;
+  animation: bodyGradientShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes bodyGradientShift {
+  0% { background-position: 0% 0%, 100% 0%, 50% 100%; }
+  50% { background-position: 20% 10%, 80% 20%, 40% 80%; }
+  100% { background-position: 10% 5%, 90% 30%, 50% 95%; }
+}
+
+/* --- Grid texture on all light sections --- */
+.how-it-works-section::after,
+.featured-section::after,
+.testimonials-section::after,
+.locations-section::after,
+.trust-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+  background-image:
+    linear-gradient(rgba(15, 118, 110, 1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 1) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+  mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 20%, transparent 70%);
+}
+
+.how-it-works-section,
+.featured-section,
+.testimonials-section,
+.locations-section,
+.trust-section {
+  position: relative;
+}
+
+/* --- Floating blob container (absolute, covers page) --- */
+.section-blobs-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* --- Section blob animation --- */
+@keyframes sectionBlobFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 30px) scale(0.95); }
+  75% { transform: translate(15px, 15px) scale(1.02); }
+  100% { transform: translate(-10px, -30px) scale(1); }
+}
+
+/* --- Scroll-reactive section transitions --- */
+.scroll-reactive-section {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reactive-section.scroll-reactive-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Section gradient washes (atmospheric color bleed between sections) --- */
+.how-it-works-section {
+  background:
+    radial-gradient(ellipse 60% 30% at 20% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 100%),
+    linear-gradient(180deg, var(--bg) 0%, rgba(240, 250, 247, 0.5) 100%);
+}
+
+.featured-section {
+  background:
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(15, 118, 110, 0.04) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 30% at 10% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 100%),
+    linear-gradient(180deg, #fff 0%, rgba(240, 250, 247, 0.3) 50%, #fff 100%);
+}
+
+.testimonials-section {
+  background:
+    radial-gradient(ellipse 50% 50% at 30% 30%, rgba(16, 185, 129, 0.04) 0%, transparent 100%),
+    linear-gradient(180deg, rgba(240, 250, 247, 0.3) 0%, var(--bg) 50%, rgba(240, 250, 247, 0.2) 100%);
+}
+
+.locations-section {
+  background:
+    radial-gradient(ellipse 70% 30% at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 100%),
+    linear-gradient(180deg, var(--bg) 0%, rgba(240, 250, 247, 0.4) 100%);
+}
+
+.trust-section {
+  background:
+    radial-gradient(ellipse 60% 40% at 70% 60%, rgba(15, 118, 110, 0.04) 0%, transparent 100%),
+    linear-gradient(180deg, rgba(240, 250, 247, 0.4) 0%, var(--bg) 100%);
+}
+
+/* --- Ambient glow orbs between sections (fixed position, always visible) --- */
+.section-glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+.section-glow-orb--1 {
+  width: 500px;
+  height: 500px;
+  top: 30%;
+  left: -10%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.06), transparent 65%);
+  animation: sectionGlowDrift1 35s ease-in-out infinite alternate;
+}
+
+.section-glow-orb--2 {
+  width: 400px;
+  height: 400px;
+  top: 55%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(15, 118, 110, 0.05), transparent 65%);
+  animation: sectionGlowDrift2 28s ease-in-out infinite alternate;
+}
+
+.section-glow-orb--3 {
+  width: 350px;
+  height: 350px;
+  top: 80%;
+  left: 30%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.04), transparent 65%);
+  animation: sectionGlowDrift3 32s ease-in-out infinite alternate;
+}
+
+@keyframes sectionGlowDrift1 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(60px, -40px); }
+}
+
+@keyframes sectionGlowDrift2 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-50px, 30px); }
+}
+
+@keyframes sectionGlowDrift3 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(40px, -60px); }
+}
+
+/* --- Card inner glow on hover (alive feel for all cards) --- */
+.how-it-works-card::after,
+.testimonial-card::after,
+.featured-property-card.is-hot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(16, 185, 129, 0.08), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.how-it-works-card:hover::after,
+.testimonial-card:hover::after,
+.featured-property-card.is-hot:hover::after {
+  opacity: 1;
+}
+
+/* --- Section heading gradient underline animation --- */
+.premium-heading h2 {
+  background: linear-gradient(135deg, var(--text) 60%, var(--brand) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- Trust card inner ambient glow --- */
+.premium-trust-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-trust-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.06), transparent 50%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.premium-trust-card:hover::before {
+  opacity: 1;
+}
+
+/* --- Location chip shimmer effect --- */
+.premium-location-chip {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-location-chip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.6s ease;
+}
+
+.premium-location-chip:hover::before {
+  left: 100%;
+}
+
+/* --- Stats panel alive pulse --- */
+.premium-stat-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-stat-panel::before {
+  content: '';
+  position: absolute;
+  top: -2rem;
+  right: -2rem;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.1), transparent 65%);
+  animation: statsGlowPulse 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes statsGlowPulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.15); }
+}
+
+/* --- Footer alive border --- */
+.premium-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(16, 185, 129, 0.2) 20%,
+    rgba(16, 185, 129, 0.5) 50%,
+    rgba(16, 185, 129, 0.2) 80%,
+    transparent 100%
+  );
+  animation: footerBorderSweep 8s linear infinite;
+}
+
+@keyframes footerBorderSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* --- Dark section internal glow --- */
+.premium-section-dark {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-section-dark::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.06), transparent 65%);
+  pointer-events: none;
+  animation: darkSectionGlow 10s ease-in-out infinite alternate;
+}
+
+@keyframes darkSectionGlow {
+  0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* --- Reduced motion: kill all alive background animations --- */
+@media (prefers-reduced-motion: reduce) {
+  body { animation: none; }
+  .section-glow-orb { animation: none; }
+  .premium-stat-panel::before { animation: none; }
+  .premium-footer::before { animation: none; }
+  .premium-section-dark::after { animation: none; }
+  .premium-location-chip::before { display: none; }
+  .scroll-reactive-section {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

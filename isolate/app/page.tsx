@@ -2,6 +2,7 @@ import { PremiumLandingShell } from '@/components/PremiumLandingShell';
 import { HeroEntryCards } from '@/components/HeroEntryCards';
 import { PremiumStats } from '@/components/system/PremiumStats';
 import { AmbientParticles } from '@/components/system/AmbientParticles';
+import { SectionBlobs, ScrollReactiveSection } from '@/components/system/SectionBlobs';
 import dynamic from 'next/dynamic';
 import { FEATURED_KENYA_LOCATIONS } from '@/domain/locations';
 import { BRAND_IDENTITY } from '@/domain/brand';
@@ -19,6 +20,126 @@ const CATEGORY_ICONS: Record<string, string> = {
   offices: '🏢',
   'event-halls': '🎉'
 };
+
+const HOW_IT_WORKS_STEPS = [
+  {
+    number: '01',
+    icon: '🔍',
+    title: 'Tell us what you need',
+    description: 'Answer a few simple questions — what type of space, your budget, preferred location, and what matters most to you.',
+    detail: 'Takes under 2 minutes'
+  },
+  {
+    number: '02',
+    icon: '✨',
+    title: 'We match you intelligently',
+    description: 'Our system finds properties that fit your exact needs — verified listings with confirmed vacancies, real prices, and honest information.',
+    detail: 'No fake listings, ever'
+  },
+  {
+    number: '03',
+    icon: '🤝',
+    title: 'Connect and move in',
+    description: 'Contact the property manager directly via WhatsApp, arrange a viewing, and find your next space — all without hidden fees.',
+    detail: 'Direct to property owners'
+  }
+];
+
+const FEATURED_PROPERTIES = [
+  {
+    id: 1,
+    type: 'house',
+    icon: '🏠',
+    name: '2BR Apartment in Westlands',
+    location: 'Nairobi, Westlands',
+    price: 'KES 35,000/mo',
+    deposit: '2 months deposit',
+    features: ['2 Bedrooms', '1 Bathroom', 'Parking', 'Water included'],
+    status: 'verified',
+    hot: true
+  },
+  {
+    id: 2,
+    type: 'shop',
+    icon: '🏪',
+    name: 'Retail Space — Biashara Street',
+    location: 'Nairobi, CBD',
+    price: 'KES 45,000/mo',
+    deposit: '3 months deposit',
+    features: ['Ground floor', 'High foot traffic', 'Shutter door', 'Water & electricity'],
+    status: 'verified',
+    hot: false
+  },
+  {
+    id: 3,
+    type: 'office',
+    icon: '🏢',
+    name: 'Private Office Suite — Upper Hill',
+    location: 'Nairobi, Upper Hill',
+    price: 'KES 55,000/mo',
+    deposit: '2 months deposit',
+    features: ['Furnished option', 'Parking ×2', 'Security', 'Meeting room'],
+    status: 'verified',
+    hot: true
+  },
+  {
+    id: 4,
+    type: 'event-hall',
+    icon: '🎉',
+    name: 'Garden Event Space — Karen',
+    location: 'Nairobi, Karen',
+    price: 'KES 80,000/day',
+    deposit: '50% advance',
+    features: ['Outdoor garden', '200 capacity', 'Parking', 'Kitchen access'],
+    status: 'verified',
+    hot: false
+  },
+  {
+    id: 5,
+    type: 'house',
+    icon: '🏠',
+    name: '3BR Townhouse — Kileleshwa',
+    location: 'Nairobi, Kileleshwa',
+    price: 'KES 65,000/mo',
+    deposit: '3 months deposit',
+    features: ['3 Bedrooms', 'DSQ', 'Garden', '24/7 security'],
+    status: 'verified',
+    hot: false
+  },
+  {
+    id: 6,
+    type: 'shop',
+    icon: '🏪',
+    name: 'Stall Space — Gikomba',
+    location: 'Nairobi, Eastlands',
+    price: 'KES 15,000/mo',
+    deposit: '2 months deposit',
+    features: ['Covered space', 'Market access', 'Water', 'Lockable'],
+    status: 'verified',
+    hot: true
+  }
+];
+
+const TESTIMONIALS = [
+  {
+    name: 'Grace Wanjiku',
+    role: 'Tenant, Nairobi',
+    text: 'I found my apartment in Westlands in just 15 minutes. The guided search asked exactly the right questions and every listing was real — no fake photos or hidden charges.',
+    avatar: '👩🏾'
+  },
+  {
+    name: 'James Kipchoge',
+    role: 'Property Manager, Eldoret',
+    text: 'Listing my properties was incredibly simple. The WhatsApp notifications mean I never miss a tenant inquiry. Best platform for Kenyan property managers.',
+    avatar: '👨🏿'
+  },
+  {
+    name: 'Fatima Hassan',
+    role: 'Shop Owner, Mombasa',
+    text: 'After months of calling agents with fake listings, PataSpace was a breath of fresh air. Verified shops with confirmed vacancies — exactly what I needed.',
+    avatar: '👩🏾'
+  }
+];
 
 export default function Home() {
   return (
@@ -87,87 +208,192 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ========== CATEGORIES (dark section) ========== */}
-        <div className="premium-section-dark">
-          <section className="premium-section">
+        {/* ========== HOW IT WORKS ========== */}
+        <section className="section-flow-glow" aria-hidden="true" />
+        <ScrollReactiveSection>
+          <section className="premium-section how-it-works-section">
             <div className="premium-heading premium-reveal">
-              <span className="section-eyebrow">Supported categories</span>
-              <h2>Four rental categories, nothing else</h2>
-              <p>No sales, hotels, short-stay clone workflows, or extra categories. Just the rental foundations that matter in Kenya.</p>
+              <span className="section-eyebrow">How it works</span>
+              <h2>Find your next space in three simple steps</h2>
+              <p>No agents, no hidden fees, no wasted time. Just honest matching based on what you actually need.</p>
             </div>
 
-            <div className="dark-cards-grid">
-              {PROPERTY_CATEGORIES.map((category, i) => (
-                <div key={category.id} className="dark-card premium-stagger" data-stagger-index={String(i)}>
-                  <span className="dark-card-icon" aria-hidden="true">{CATEGORY_ICONS[category.id] ?? '🏘️'}</span>
-                  <h3>{category.label}</h3>
-                  <p>{category.description}</p>
-                  <ul>
-                    {category.supportedTypes.slice(0, 3).map((type) => (
-                      <li key={type}>{type}</li>
+            <div className="how-it-works-grid">
+              {HOW_IT_WORKS_STEPS.map((step, i) => (
+                <div key={step.number} className="how-it-works-card premium-stagger" data-stagger-index={String(i)}>
+                  <div className="how-it-works-number">{step.number}</div>
+                  <div className="how-it-works-icon" aria-hidden="true">{step.icon}</div>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                  <span className="how-it-works-detail">{step.detail}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Connector line between steps */}
+            <div className="how-it-works-connector" aria-hidden="true">
+              <div className="connector-dot connector-dot-1" />
+              <div className="connector-line" />
+              <div className="connector-dot connector-dot-2" />
+              <div className="connector-line" />
+              <div className="connector-dot connector-dot-3" />
+            </div>
+          </section>
+        </ScrollReactiveSection>
+
+        {/* ========== CATEGORIES (dark section) ========== */}
+        <ScrollReactiveSection>
+          <div className="premium-section-dark">
+            <section className="premium-section">
+              <div className="premium-heading premium-reveal">
+                <span className="section-eyebrow">Supported categories</span>
+                <h2>Four rental categories, nothing else</h2>
+                <p>No sales, hotels, short-stay clone workflows, or extra categories. Just the rental foundations that matter in Kenya.</p>
+              </div>
+
+              <div className="dark-cards-grid">
+                {PROPERTY_CATEGORIES.map((category, i) => (
+                  <div key={category.id} className="dark-card premium-stagger" data-stagger-index={String(i)}>
+                    <span className="dark-card-icon" aria-hidden="true">{CATEGORY_ICONS[category.id] ?? '🏘️'}</span>
+                    <h3>{category.label}</h3>
+                    <p>{category.description}</p>
+                    <ul>
+                      {category.supportedTypes.slice(0, 3).map((type) => (
+                        <li key={type}>{type}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </ScrollReactiveSection>
+
+        {/* ========== FEATURED PROPERTIES ========== */}
+        <ScrollReactiveSection>
+          <section className="premium-section featured-section">
+            <div className="section-flow-glow section-flow-glow-top" aria-hidden="true" />
+            <div className="premium-heading premium-reveal">
+              <span className="section-eyebrow">Featured listings</span>
+              <h2>Real properties, verified and available</h2>
+              <p>Every listing is checked before it appears. Vacancy status is confirmed, prices are real, and every property manager is identifiable.</p>
+            </div>
+
+            <div className="featured-properties-grid">
+              {FEATURED_PROPERTIES.map((property, i) => (
+                <div key={property.id} className={`featured-property-card premium-stagger ${property.hot ? 'is-hot' : ''}`} data-stagger-index={String(i % 6)}>
+                  <div className="featured-property-header">
+                    <span className="featured-property-type">{property.icon} {property.type.charAt(0).toUpperCase() + property.type.slice(1)}</span>
+                    {property.hot && <span className="featured-property-hot">Popular</span>}
+                    <span className="featured-property-verified">✓ Verified</span>
+                  </div>
+                  <h3>{property.name}</h3>
+                  <p className="featured-property-location">{property.location}</p>
+                  <div className="featured-property-price">{property.price}</div>
+                  <div className="featured-property-deposit">{property.deposit}</div>
+                  <div className="featured-property-features">
+                    {property.features.map((f) => (
+                      <span key={f}>{f}</span>
                     ))}
-                  </ul>
+                  </div>
+                  <a className="featured-property-cta pill-btn pill-btn-outline" href="#entry">
+                    View details
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </a>
+                </div>
+              ))}
+            </div>
+
+            <div className="featured-see-all premium-reveal">
+              <a className="pill-btn pill-btn-accent" href="#entry">
+                Search all listings
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </section>
+        </ScrollReactiveSection>
+
+        {/* ========== GUIDED SEARCH ========== */}
+        <ScrollReactiveSection>
+          <section className="premium-section">
+            <div className="premium-reveal">
+              <GuidedSearch />
+            </div>
+          </section>
+        </ScrollReactiveSection>
+
+        {/* ========== TESTIMONIALS ========== */}
+        <ScrollReactiveSection>
+          <section className="premium-section testimonials-section">
+            <div className="premium-heading premium-reveal">
+              <span className="section-eyebrow">What Kenyans say</span>
+              <h2>Trusted by tenants and property managers</h2>
+              <p>Real experiences from people who found their space through PataSpace.</p>
+            </div>
+
+            <div className="testimonials-grid">
+              {TESTIMONIALS.map((testimonial, i) => (
+                <div key={testimonial.name} className="testimonial-card premium-stagger" data-stagger-index={String(i)}>
+                  <div className="testimonial-stars" aria-label="5 stars">★★★★★</div>
+                  <p className="testimonial-text">&ldquo;{testimonial.text}&rdquo;</p>
+                  <div className="testimonial-author">
+                    <span className="testimonial-avatar" aria-hidden="true">{testimonial.avatar}</span>
+                    <div>
+                      <div className="testimonial-name">{testimonial.name}</div>
+                      <div className="testimonial-role">{testimonial.role}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
-        </div>
-
-        {/* ========== GUIDED SEARCH ========== */}
-        <section className="premium-section">
-          <div className="premium-reveal">
-            <GuidedSearch />
-          </div>
-        </section>
-
-        {/* ========== 4-PILL BAND ========== */}
-        <section className="premium-section">
-          <div className="premium-band">
-            <div className="premium-band-pill band-light premium-stagger" data-stagger-index="0">We</div>
-            <div className="premium-band-pill band-accent premium-stagger" data-stagger-index="1">Build</div>
-            <div className="premium-band-pill band-dark premium-stagger" data-stagger-index="2">→</div>
-            <div className="premium-band-pill band-ghost premium-stagger" data-stagger-index="3">Better</div>
-          </div>
-        </section>
+        </ScrollReactiveSection>
 
         {/* ========== LOCATIONS ========== */}
-        <section className="premium-section">
-          <div className="premium-heading premium-reveal">
-            <span className="section-eyebrow">Location architecture</span>
-            <h2>Structured for every place in Kenya</h2>
-            <p>Searches cover counties, towns, estates, suburbs, market centres, villages, and growing urban areas.</p>
-          </div>
-          <div className="premium-location-strip">
-            {FEATURED_KENYA_LOCATIONS.map((location, i) => (
-              <span key={location.id} className="premium-location-chip premium-stagger" data-stagger-index={String(i % 8)}>
-                {location.name}
-              </span>
-            ))}
-          </div>
-        </section>
+        <ScrollReactiveSection>
+          <section className="premium-section locations-section">
+            <div className="section-flow-glow section-flow-glow-top" aria-hidden="true" />
+            <div className="premium-heading premium-reveal">
+              <span className="section-eyebrow">Location architecture</span>
+              <h2>Structured for every place in Kenya</h2>
+              <p>Searches cover counties, towns, estates, suburbs, market centres, villages, and growing urban areas.</p>
+            </div>
+            <div className="premium-location-strip">
+              {FEATURED_KENYA_LOCATIONS.map((location, i) => (
+                <span key={location.id} className="premium-location-chip premium-stagger" data-stagger-index={String(i % 8)}>
+                  {location.name}
+                </span>
+              ))}
+            </div>
+          </section>
+        </ScrollReactiveSection>
 
         {/* ========== TRUST ========== */}
-        <section className="premium-section">
-          <div className="premium-heading premium-reveal">
-            <span className="section-eyebrow">Trust first</span>
-            <h2>Trust is more important than quantity</h2>
-            <p>Every foundation decision is aimed at reducing fake listings, incorrect information, and frustration.</p>
-          </div>
-          <div className="premium-trust-grid">
-            {TRUST_PRINCIPLES.map((signal, i) => (
-              <div key={signal.id} className="premium-trust-card premium-stagger" data-stagger-index={String(i % 8)}>
-                <div className="premium-trust-icon" aria-hidden="true">✓</div>
-                <div>
-                  <h3>{signal.label}</h3>
-                  <p>{signal.description}</p>
+        <ScrollReactiveSection>
+          <section className="premium-section trust-section">
+            <div className="premium-heading premium-reveal">
+              <span className="section-eyebrow">Trust first</span>
+              <h2>Trust is more important than quantity</h2>
+              <p>Every foundation decision is aimed at reducing fake listings, incorrect information, and frustration.</p>
+            </div>
+            <div className="premium-trust-grid">
+              {TRUST_PRINCIPLES.map((signal, i) => (
+                <div key={signal.id} className="premium-trust-card premium-stagger" data-stagger-index={String(i % 8)}>
+                  <div className="premium-trust-icon" aria-hidden="true">✓</div>
+                  <div>
+                    <h3>{signal.label}</h3>
+                    <p>{signal.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        </ScrollReactiveSection>
 
         {/* ========== STATS ========== */}
-        <PremiumStats />
+        <ScrollReactiveSection>
+          <PremiumStats />
+        </ScrollReactiveSection>
 
         {/* ========== FOOTER ========== */}
         <footer className="premium-footer">
@@ -227,8 +453,18 @@ export default function Home() {
             </div>
           </div>
         </footer>
-      </main>        {/* Grain texture overlay */}
-        <div className="grain-overlay" aria-hidden="true" />
+      </main>
+
+      {/* Section-level ambient glow orbs (fixed, drift slowly) */}
+      <div className="section-glow-orb section-glow-orb--1" aria-hidden="true" />
+      <div className="section-glow-orb section-glow-orb--2" aria-hidden="true" />
+      <div className="section-glow-orb section-glow-orb--3" aria-hidden="true" />
+
+      {/* Grain texture overlay */}
+      <div className="grain-overlay" aria-hidden="true" />
+
+      {/* Floating ambient blobs */}
+      <SectionBlobs />
 
     </PremiumLandingShell>);
 }
