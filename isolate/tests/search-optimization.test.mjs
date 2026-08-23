@@ -1,0 +1,42 @@
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+
+const domain = readFileSync(new URL('../src/domain/search-optimization.ts', import.meta.url), 'utf8');
+const service = readFileSync(new URL('../src/server/search-optimization/service.ts', import.meta.url), 'utf8');
+const foundation = readFileSync(new URL('../src/lib/foundation.ts', import.meta.url), 'utf8');
+const page = readFileSync(new URL('../app/admin/search-intelligence/page.tsx', import.meta.url), 'utf8');
+const dashboard = readFileSync(new URL('../src/components/dashboard/DashboardShell.tsx', import.meta.url), 'utf8');
+
+for (const category of ['Houses','Shops','Offices','Event Halls']) assert.ok(domain.includes(category), `Search applies to ${category}`);
+assert.ok(domain.includes('Which available property best matches what this customer wants?'), 'Core match question missing');
+assert.ok(domain.includes('customerIntentComesFirst: true'), 'Customer intent priority missing');
+assert.ok(domain.includes('aiNeverPrioritisesPlatformConvenienceOverCustomerIntent: true'), 'AI must not prioritise convenience');
+assert.ok(domain.includes('categorySpecificSearchWorkflows: true'), 'Category-specific workflows missing');
+for (const control of ['toggle','option-card','multi-select','yes-no-switch']) assert.ok(domain.includes(control), `Missing control ${control}`);
+assert.ok(domain.includes('approximately15To20IntelligentFilters: true'), '15-20 filters principle missing');
+for (const filter of ['County','Town','Estate / Neighbourhood','Budget','Property Category','Bedrooms','Water Availability','Electricity Information','Road Access','Parking','Security Features','Furnished / Unfurnished','Accessibility','Nearby Facilities','Floor Preference']) assert.ok(domain.includes(filter), `Missing intelligent filter ${filter}`);
+assert.ok(domain.includes('Tell us more to help us find your ideal property.'), 'AI Search Description title missing');
+assert.ok(domain.includes('restrictiveCharacterLimit: false'), 'Search description must not have restrictive limit');
+assert.ok(domain.includes('preservesOriginalMeaning: true'), 'Original meaning preservation missing');
+assert.ok(domain.includes("priority1: 'Match Accuracy'"), 'Match Accuracy priority missing');
+assert.ok(domain.includes('matchAccuracyAlwaysHighestRankingFactor: true'), 'Match Accuracy highest factor missing');
+assert.ok(domain.includes("finalRankingFactor: 'Daily Vacancy Confirmation'"), 'Daily Vacancy Confirmation final ranking factor missing');
+assert.ok(domain.includes('nearbyTownsOnlyWhenNoMeaningfulMatchesExist: true'), 'Nearby alternatives rule missing');
+for (const town of ['Athi River','Mlolongo','Syokimau']) assert.ok(domain.includes(town), `Nearby example missing ${town}`);
+assert.ok(domain.includes('neverBypassesCustomerAccessControl: true'), 'Saved searches must not bypass access control');
+assert.ok(domain.includes('privateToCustomer: true'), 'Saved searches must be private');
+assert.ok(domain.includes('quietlyMonitorsSavedSearches: true'), 'Personal Property Assistant monitoring missing');
+assert.ok(domain.includes('notifiesOnlyForMeaningfulNewMatches: true'), 'Meaningful notification rule missing');
+assert.ok(domain.includes('groupsSimilarPropertyNotifications: true'), 'Grouped notifications missing');
+for (const perf of ['Search speed','Match accuracy','Filter relevance','AI understanding','Result quality']) assert.ok(domain.includes(perf), `Search performance item missing ${perf}`);
+for (const rule of ['mustNeverModifyFounderApprovedRankingPriorities','mustNeverOverrideCustomerAccessControl','mustNeverChangePricing','mustNeverChangeBusinessRules','onlyFounderApprovesBusinessLogicChanges']) assert.ok(domain.includes(`${rule}: true`), `AI learning rule missing ${rule}`);
+assert.ok(service.includes('saveCustomerSearch'), 'Save search service missing');
+assert.ok(service.includes('listSavedSearches'), 'List saved searches missing');
+assert.ok(service.includes('notifyMeaningfulSavedSearchMatch'), 'Personal Property Assistant notification service missing');
+assert.ok(service.includes('createNotification'), 'Saved search notification integration missing');
+assert.ok(service.includes('trackAnalyticsEvent'), 'Analytics integration missing');
+assert.ok(foundation.includes('searchOptimisation: SEARCH_OPTIMISATION_FOUNDATION'), 'Foundation snapshot must expose search optimisation');
+assert.ok(page.includes('Search Optimisation & AI Match Engine'), 'Admin search intelligence page missing');
+assert.ok(dashboard.includes('/admin/search-intelligence'), 'Admin dashboard link missing');
+
+console.log('PataSpace search optimisation foundation checks passed.');

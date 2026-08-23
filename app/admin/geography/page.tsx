@@ -1,0 +1,4 @@
+import { requireCurrentUser } from '@/server/auth/current-user';
+import { listKenyaGeographicLocations } from '@/server/unified-platform/geography-service';
+export const metadata = { title: 'Geographic Intelligence — PataSpace' };
+export default async function GeographyPage() { await requireCurrentUser('/admin/dashboard'); const locations = await listKenyaGeographicLocations(); return <main className="dashboard-page"><section className="dashboard-card"><span className="badge">Founder Geographic Authority</span><h1>Kenya Geographic Intelligence</h1><p>Legitimate new Kenyan locations are accepted, learned and made available while Founder decisions override automated updates.</p><div className="role-list">{locations.slice(0,100).map((loc)=><article key={loc.id}><h3>{loc.name}</h3><p>{loc.type} · {loc.county ?? 'Kenya'} · {loc.validated ? 'Validated' : 'Needs validation'}</p><p>Source: {loc.source}</p></article>)}</div></section></main>; }

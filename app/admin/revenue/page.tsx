@@ -1,0 +1,4 @@
+import { requireCurrentUser } from '@/server/auth/current-user';
+import { getRevenueDashboard } from '@/server/revenue/service';
+export const metadata = { title: 'Revenue Intelligence — PataSpace' };
+export default async function RevenuePage() { await requireCurrentUser('/admin/dashboard'); const revenue = await getRevenueDashboard(); return <main className="dashboard-page"><section className="dashboard-card"><span className="badge">Revenue Intelligence</span><h1>Revenue Dashboard</h1><div className="cards-grid"><article className="info-card"><h3>Today</h3><p>KES {revenue.overall.today.amount}</p></article><article className="info-card"><h3>This Week</h3><p>KES {revenue.overall['this-week'].amount}</p></article><article className="info-card"><h3>This Month</h3><p>KES {revenue.overall['this-month'].amount}</p></article><article className="info-card"><h3>Lifetime</h3><p>KES {revenue.overall.lifetime.amount}</p></article></div></section></main>; }
