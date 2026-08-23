@@ -3,6 +3,7 @@ import { HeroEntryCards } from '@/components/HeroEntryCards';
 import { PremiumStats } from '@/components/system/PremiumStats';
 import { AmbientParticles } from '@/components/system/AmbientParticles';
 import { SectionBlobs, ScrollReactiveSection } from '@/components/system/SectionBlobs';
+import { FeaturedPropertiesLive, TestimonialsLive } from '@/components/LandingLiveData';
 import dynamic from 'next/dynamic';
 import { FEATURED_KENYA_LOCATIONS } from '@/domain/locations';
 import { BRAND_IDENTITY } from '@/domain/brand';
@@ -45,101 +46,7 @@ const HOW_IT_WORKS_STEPS = [
   }
 ];
 
-const FEATURED_PROPERTIES = [
-  {
-    id: 1,
-    type: 'house',
-    icon: '🏠',
-    name: '2BR Apartment in Westlands',
-    location: 'Nairobi, Westlands',
-    price: 'KES 35,000/mo',
-    deposit: '2 months deposit',
-    features: ['2 Bedrooms', '1 Bathroom', 'Parking', 'Water included'],
-    status: 'verified',
-    hot: true
-  },
-  {
-    id: 2,
-    type: 'shop',
-    icon: '🏪',
-    name: 'Retail Space — Biashara Street',
-    location: 'Nairobi, CBD',
-    price: 'KES 45,000/mo',
-    deposit: '3 months deposit',
-    features: ['Ground floor', 'High foot traffic', 'Shutter door', 'Water & electricity'],
-    status: 'verified',
-    hot: false
-  },
-  {
-    id: 3,
-    type: 'office',
-    icon: '🏢',
-    name: 'Private Office Suite — Upper Hill',
-    location: 'Nairobi, Upper Hill',
-    price: 'KES 55,000/mo',
-    deposit: '2 months deposit',
-    features: ['Furnished option', 'Parking ×2', 'Security', 'Meeting room'],
-    status: 'verified',
-    hot: true
-  },
-  {
-    id: 4,
-    type: 'event-hall',
-    icon: '🎉',
-    name: 'Garden Event Space — Karen',
-    location: 'Nairobi, Karen',
-    price: 'KES 80,000/day',
-    deposit: '50% advance',
-    features: ['Outdoor garden', '200 capacity', 'Parking', 'Kitchen access'],
-    status: 'verified',
-    hot: false
-  },
-  {
-    id: 5,
-    type: 'house',
-    icon: '🏠',
-    name: '3BR Townhouse — Kileleshwa',
-    location: 'Nairobi, Kileleshwa',
-    price: 'KES 65,000/mo',
-    deposit: '3 months deposit',
-    features: ['3 Bedrooms', 'DSQ', 'Garden', '24/7 security'],
-    status: 'verified',
-    hot: false
-  },
-  {
-    id: 6,
-    type: 'shop',
-    icon: '🏪',
-    name: 'Stall Space — Gikomba',
-    location: 'Nairobi, Eastlands',
-    price: 'KES 15,000/mo',
-    deposit: '2 months deposit',
-    features: ['Covered space', 'Market access', 'Water', 'Lockable'],
-    status: 'verified',
-    hot: true
-  }
-];
 
-const TESTIMONIALS = [
-  {
-    name: 'Grace Wanjiku',
-    role: 'Tenant, Nairobi',
-    text: 'I found my apartment in Westlands in just 15 minutes. The guided search asked exactly the right questions and every listing was real — no fake photos or hidden charges.',
-    avatar: '👩🏾'
-  },
-  {
-    name: 'James Kipchoge',
-    role: 'Property Manager, Eldoret',
-    text: 'Listing my properties was incredibly simple. The WhatsApp notifications mean I never miss a tenant inquiry. Best platform for Kenyan property managers.',
-    avatar: '👨🏿'
-  },
-  {
-    name: 'Fatima Hassan',
-    role: 'Shop Owner, Mombasa',
-    text: 'After months of calling agents with fake listings, PataSpace was a breath of fresh air. Verified shops with confirmed vacancies — exactly what I needed.',
-    avatar: '👩🏾'
-  }
-];
 
 export default function Home() {
   return (
@@ -269,40 +176,17 @@ export default function Home() {
           </div>
         </ScrollReactiveSection>
 
-        {/* ========== FEATURED PROPERTIES ========== */}
+        {/* ========== FEATURED PROPERTIES (live data) ========== */}
         <ScrollReactiveSection>
           <section className="premium-section featured-section">
             <div className="section-flow-glow section-flow-glow-top" aria-hidden="true" />
             <div className="premium-heading premium-reveal">
               <span className="section-eyebrow">Featured listings</span>
-              <h2>Real properties, verified and available</h2>
-              <p>Every listing is checked before it appears. Vacancy status is confirmed, prices are real, and every property manager is identifiable.</p>
+              <h2>Verified properties available now</h2>
+              <p>Real listings from real property owners across Kenya. Unlock any listing to see full details, photos, and contact information.</p>
             </div>
 
-            <div className="featured-properties-grid">
-              {FEATURED_PROPERTIES.map((property, i) => (
-                <div key={property.id} className={`featured-property-card premium-stagger ${property.hot ? 'is-hot' : ''}`} data-stagger-index={String(i % 6)}>
-                  <div className="featured-property-header">
-                    <span className="featured-property-type">{property.icon} {property.type.charAt(0).toUpperCase() + property.type.slice(1)}</span>
-                    {property.hot && <span className="featured-property-hot">Popular</span>}
-                    <span className="featured-property-verified">✓ Verified</span>
-                  </div>
-                  <h3>{property.name}</h3>
-                  <p className="featured-property-location">{property.location}</p>
-                  <div className="featured-property-price">{property.price}</div>
-                  <div className="featured-property-deposit">{property.deposit}</div>
-                  <div className="featured-property-features">
-                    {property.features.map((f) => (
-                      <span key={f}>{f}</span>
-                    ))}
-                  </div>
-                  <a className="featured-property-cta pill-btn pill-btn-outline" href="#entry">
-                    View details
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  </a>
-                </div>
-              ))}
-            </div>
+            <FeaturedPropertiesLive />
 
             <div className="featured-see-all premium-reveal">
               <a className="pill-btn pill-btn-accent" href="#entry">
@@ -322,30 +206,16 @@ export default function Home() {
           </section>
         </ScrollReactiveSection>
 
-        {/* ========== TESTIMONIALS ========== */}
+        {/* ========== TESTIMONIALS (live data) ========== */}
         <ScrollReactiveSection>
           <section className="premium-section testimonials-section">
             <div className="premium-heading premium-reveal">
               <span className="section-eyebrow">What Kenyans say</span>
-              <h2>Trusted by tenants and property managers</h2>
-              <p>Real experiences from people who found their space through PataSpace.</p>
+              <h2>Real reviews from real tenants</h2>
+              <p>Every review comes from a verified viewing interaction. No fake reviews, no paid testimonials.</p>
             </div>
 
-            <div className="testimonials-grid">
-              {TESTIMONIALS.map((testimonial, i) => (
-                <div key={testimonial.name} className="testimonial-card premium-stagger" data-stagger-index={String(i)}>
-                  <div className="testimonial-stars" aria-label="5 stars">★★★★★</div>
-                  <p className="testimonial-text">&ldquo;{testimonial.text}&rdquo;</p>
-                  <div className="testimonial-author">
-                    <span className="testimonial-avatar" aria-hidden="true">{testimonial.avatar}</span>
-                    <div>
-                      <div className="testimonial-name">{testimonial.name}</div>
-                      <div className="testimonial-role">{testimonial.role}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <TestimonialsLive />
           </section>
         </ScrollReactiveSection>
 
