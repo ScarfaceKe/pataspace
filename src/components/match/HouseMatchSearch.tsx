@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ParticleConstellation } from '@/components/system/ParticleConstellation';
 import { usePersistentMatchState } from './usePersistentMatchState';
 import { NEARBY_PLACES, RESIDENTIAL_CATEGORIES, WATER_AVAILABILITY_OPTIONS, type NearbyPlaceId, type ResidentialCategoryId, type WaterAvailabilityId } from '@/domain/house-registration';
 import type { HouseMatchIntelligenceResponse } from '@/domain/house-match-intelligence';
@@ -19,19 +20,30 @@ export function HouseMatchSearch() {
   const [aiSearchDescription, setAiSearchDescription] = usePersistentMatchState('house-match:aiSearchDescription', '');
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState<HouseMatchIntelligenceResponse | null>(null);
+  const [searching, setSearching] = useState(false);
 
   function toggleWater(id: WaterAvailabilityId) { setWaterAvailability((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]); }
   function toggleNearby(id: NearbyPlaceId) { setNearbyPlaces((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]); }
 
   async function search() {
-    setMessage('Finding matching homes...');
+    setSearching(true);
+    setMessage('');
     const result = await fetch('/api/match/house/intelligent', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ residentialCategory, county, townOrCity, estateOrNeighbourhood, maximumMonthlyRent: maximumMonthlyRent ? Number(maximumMonthlyRent) : undefined, maximumDeposit: maximumDeposit ? Number(maximumDeposit) : undefined, waterAvailability, electricityRequired, nearbyPlaces, aiSearchDescription })
     });
     const data = await result.json();
     setResponse(data);
+    setSearching(false);
     setMessage(data.cards?.length ? 'Best matching homes prepared.' : 'No exact matches yet. PataSpace avoids empty results where suitable alternatives exist.');
+  }
+
+  if (searching) {
+    return (
+      <section className="property-registration-card match-wizard" aria-labelledby="house-match-title">
+        <ParticleConstellation message="Finding matching homes..." />
+      </section>
+    );
   }
 
   return (
