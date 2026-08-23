@@ -1,5 +1,0 @@
-import { requireCurrentUser } from '@/server/auth/current-user';
-import { AI_RECOMMENDATION_ENGINE_FOUNDATION } from '@/domain/recommendation-engine';
-import { getRecommendationAnalytics } from '@/server/recommendations/service';
-export const metadata = { title: 'Recommendation Intelligence — PataSpace' };
-export default async function RecommendationAdminPage() { await requireCurrentUser('/admin/dashboard'); const analytics = await getRecommendationAnalytics(); return <main className="dashboard-page"><section className="dashboard-card"><span className="badge">AI Recommendation Engine</span><h1>Search Intelligence</h1><p>Match Accuracy remains the highest-ranking factor across Houses, Shops, Offices and Event Halls.</p><div className="review-summary-card"><h3>Foundation</h3><p>{AI_RECOMMENDATION_ENGINE_FOUNDATION.customerRequirementsAlwaysFirst ? 'Customer requirements come first.' : ''}</p><p>Recommendation quality prepared: {analytics.recommendationQualityPrepared ? 'Yes' : 'No'}</p><p>Search recovery effectiveness prepared: {analytics.searchRecoveryEffectivenessPrepared ? 'Yes' : 'No'}</p></div></section></main>; }
