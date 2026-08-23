@@ -76,6 +76,7 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingAction, setSavingAction] = useState<PropertyRegistrationAction | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const parsedHallIdentifiers = useMemo(() => {
     return hallIdentifiers.split(/[\n,]+/).map((x) => x.trim()).filter(Boolean);
@@ -157,6 +158,27 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
       imageUploadSummary = summarizeImageUploadResults(uploadResults);
     }
     setMessage(`${action === 'submit-registration' ? `${EVENT_HALL_REGISTRATION_FOUNDATION.successMessage} ${parsedHallIdentifiers.length > 0 ? 'Once the admin approves your listing, you will be notified via WhatsApp to upload photos for each individual hall. Each hall should have its own photos.' : 'If available for bookings, it proceeds to future platform workflows.'}` : result.message}${imageUploadSummary ? ` ${imageUploadSummary}` : ''}`);
+    if (action === 'submit-registration' && result.ok) setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <section className="property-registration-card" aria-labelledby="hall-registration-title">
+        <div className="registration-success">
+          <span className="success-icon">✅</span>
+          <h2>Registration Submitted Successfully</h2>
+          <p className="success-subtitle">Your event hall has been submitted and is now in the verification queue.</p>
+          <div className="success-detail">
+            <strong>What happens next:</strong>
+            Your listing will be reviewed by our team. Once approved, it will appear in customer search results. {parsedHallIdentifiers.length > 0 ? 'You will be notified via WhatsApp to upload photos for each individual hall after approval.' : ''}You can track the status from your dashboard.
+          </div>
+          <div className="success-actions">
+            <a className="primary-action" href="/dashboard">Go to Dashboard</a>
+            <a className="secondary-action" href="/properties/register/event-hall">Register Another Hall</a>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return <section className="property-registration-card" aria-labelledby="hall-registration-title">

@@ -63,6 +63,7 @@ export function MixedUseBuildingRegistrationForm({ profileRole }: { profileRole:
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingAction, setSavingAction] = useState<PropertyRegistrationAction | null>(null);
+  const [submitted, setSubmitted] = useState(false);
   const [editingUnitIndex, setEditingUnitIndex] = useState<number | null>(0);
 
   const categorySummary = useMemo(() => getCategorySummary(units), [units]);
@@ -151,6 +152,27 @@ export function MixedUseBuildingRegistrationForm({ profileRole }: { profileRole:
     }
 
     setMessage(`${result.message}${imageUploadSummary ? ` ${imageUploadSummary}` : ''}`);
+    if (action === 'submit-registration' && result.ok) setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <section className="property-registration-card" aria-labelledby="mixed-use-title">
+        <div className="registration-success">
+          <span className="success-icon">✅</span>
+          <h2>Registration Submitted Successfully</h2>
+          <p className="success-subtitle">Your mixed-use building has been submitted and is now in the verification queue.</p>
+          <div className="success-detail">
+            <strong>What happens next:</strong>
+            Your building listing will be reviewed by our team. Once approved, each category of unit will appear in its respective customer search. You can track the status from your dashboard.
+          </div>
+          <div className="success-actions">
+            <a className="primary-action" href="/dashboard">Go to Dashboard</a>
+            <a className="secondary-action" href="/properties/register/mixed-use-building">Register Another Building</a>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   const currentUnit = editingUnitIndex !== null ? units[editingUnitIndex] : null;

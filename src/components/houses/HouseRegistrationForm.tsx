@@ -112,6 +112,7 @@ export function HouseRegistrationForm({ profileRole }: HouseRegistrationFormProp
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingAction, setSavingAction] = useState<PropertyRegistrationAction | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const allowedVacancyCategories = useMemo(() => getAllowedVacancyCategories(residentialCategory), [residentialCategory]);
 
@@ -230,6 +231,27 @@ export function HouseRegistrationForm({ profileRole }: HouseRegistrationFormProp
         : result.message
     );
     if (imageUploadSummary) setMessage((current) => `${current} ${imageUploadSummary}`);
+    if (action === 'submit-registration' && result.ok) setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <section className="property-registration-card" aria-labelledby="house-registration-title">
+        <div className="registration-success">
+          <span className="success-icon">✅</span>
+          <h2>Registration Submitted Successfully</h2>
+          <p className="success-subtitle">Your residential property has been submitted and is now in the verification queue.</p>
+          <div className="success-detail">
+            <strong>What happens next:</strong>
+            Your listing will be reviewed by our team. Once approved, it will appear in customer search results. {hasVacantUnits === 'yes' ? 'You will be notified via WhatsApp to upload photos for each individual vacant unit after approval.' : ''}You can track the status from your dashboard.
+          </div>
+          <div className="success-actions">
+            <a className="primary-action" href="/dashboard">Go to Dashboard</a>
+            <a className="secondary-action" href="/properties/register/house">Register Another House</a>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -575,7 +597,7 @@ export function HouseRegistrationForm({ profileRole }: HouseRegistrationFormProp
         {step < totalSteps ? <button type="button" className="primary-action" onClick={() => setStep(step + 1)}>Continue</button> : null}
         <button type="button" className="secondary-action" onClick={() => save('save-draft')} disabled={savingAction !== null}>{savingAction === 'save-draft' ? 'Saving draft...' : 'Save as Draft'}</button>
         <button type="button" className="secondary-action" onClick={() => save('save-draft')} disabled={savingAction !== null}>Continue Later</button>
-        {step === totalSteps ? <button type="button" className="primary-action" onClick={() => save('submit-registration')} disabled={savingAction !== null}>{savingAction === 'submit-registration' ? 'Submitting...' : 'Submit when ready'}</button> : null}
+        {step === totalSteps ? <button type="button" className="primary-action" onClick={() => save('submit-registration')} disabled={savingAction !== null}>{savingAction === 'submit-registration' ? 'Submitting...' : 'Submit Registration'}</button> : null}
       </div>
 
       {message ? <div className="auth-message" role="status" aria-live="polite">{message}</div> : null}

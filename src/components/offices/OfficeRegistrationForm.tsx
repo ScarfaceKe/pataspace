@@ -85,6 +85,7 @@ export function OfficeRegistrationForm({ profileRole }: { profileRole: UserRoleI
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingAction, setSavingAction] = useState<PropertyRegistrationAction | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const parsedUnitIdentifiers = useMemo(() => {
     if (hasVacantOfficeUnits !== 'yes') return [];
@@ -170,6 +171,27 @@ export function OfficeRegistrationForm({ profileRole }: { profileRole: UserRoleI
       imageUploadSummary = summarizeImageUploadResults(uploadResults);
     }
     setMessage(`${action === 'submit-registration' ? `${OFFICE_REGISTRATION_FOUNDATION.successMessage} ${hasVacantOfficeUnits === 'yes' ? 'Your office has been registered. Once the admin approves your listing, you will be notified via WhatsApp to upload photos for each individual vacant unit. Each unit needs its own photos since conditions may differ even if units look similar.' : 'If no vacancies exist, the property remains registered until vacancies become available.'}` : result.message}${imageUploadSummary ? ` ${imageUploadSummary}` : ''}`);
+    if (action === 'submit-registration' && result.ok) setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <section className="property-registration-card" aria-labelledby="office-registration-title">
+        <div className="registration-success">
+          <span className="success-icon">✅</span>
+          <h2>Registration Submitted Successfully</h2>
+          <p className="success-subtitle">Your office property has been submitted and is now in the verification queue.</p>
+          <div className="success-detail">
+            <strong>What happens next:</strong>
+            Your listing will be reviewed by our team. Once approved, it will appear in customer search results. {hasVacantOfficeUnits === 'yes' ? 'You will be notified via WhatsApp to upload photos for each individual vacant unit after approval.' : ''}You can track the status from your dashboard.
+          </div>
+          <div className="success-actions">
+            <a className="primary-action" href="/dashboard">Go to Dashboard</a>
+            <a className="secondary-action" href="/properties/register/office">Register Another Office</a>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
