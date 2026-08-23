@@ -4056,3 +4056,347 @@ body {
     animation: none !important;
   }
 }
+
+/* =============================================
+   COMPREHENSIVE MOBILE RESPONSIVENESS
+   Covers: iPhone SE, iPhone 12-15, Samsung Galaxy,
+   iPad, Android tablets, and desktop
+   ============================================= */
+
+/* --- iPhone SE and very small phones (320px–375px) --- */
+@media (max-width: 375px) {
+  .hero-title {
+    font-size: 1.85rem;
+    max-width: 100%;
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
+    max-width: 100%;
+  }
+
+  .hero-trust-chips {
+    gap: 0.5rem;
+  }
+
+  .hero-trust-chips span {
+    font-size: 0.7rem;
+    min-height: 2rem;
+    padding: 0 0.65rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-actions .pill-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .premium-section {
+    padding: 2rem 0.75rem;
+  }
+
+  .how-it-works-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .dark-card {
+    min-height: auto;
+    padding: 1.25rem;
+  }
+
+  .featured-property-card {
+    padding: 1rem;
+  }
+
+  .footer-columns {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .premium-stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .premium-stat-number {
+    font-size: 1.75rem;
+  }
+
+  .property-registration-card {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .property-category-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .property-category-card {
+    min-height: 48px;
+    padding: 1rem;
+  }
+}
+
+/* --- Standard phones (376px–640px) --- */
+@media (min-width: 376px) and (max-width: 640px) {
+  .hero-title {
+    font-size: clamp(1.9rem, 6vw, 2.5rem);
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-actions .pill-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- All phones: ensure touch-friendly targets --- */
+@media (max-width: 640px) {
+  /* Minimum 48px touch targets for all interactive elements */
+  button,
+  a.pill-btn,
+  a.primary-action,
+  a.secondary-action,
+  .property-category-card,
+  .entry-card,
+  .category-option {
+    min-height: 44px;
+  }
+
+  /* Prevent horizontal overflow from canvas animations */
+  .morphing-blob-container,
+  .particle-constellation-container,
+  .kenya-map-container {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Forms: full-width inputs with proper spacing */
+  .auth-step {
+    padding: 0;
+  }
+
+  .field-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .field-label input,
+  .field-label select,
+  .field-label textarea {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  /* Registration actions: stack vertically */
+  .auth-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .auth-actions .primary-action,
+  .auth-actions .secondary-action {
+    width: 100%;
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Progress steps: larger touch targets */
+  .progress-steps .step {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  /* Match search forms */
+  .match-wizard {
+    padding: 1rem 0.75rem;
+  }
+
+  /* Loading overlay message readable on small screens */
+  .global-loading-overlay-message {
+    font-size: 1rem;
+    padding: 0 1rem;
+    text-align: center;
+  }
+
+  /* Constellation dots: slightly bigger on mobile for visibility */
+  .constellation-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* Morphing blob: slightly smaller on mobile to fit */
+  .morphing-blob-container canvas {
+    max-width: 180px;
+    max-height: 180px;
+  }
+
+  /* Particle constellation: fill width on mobile */
+  .particle-constellation-container {
+    min-height: 300px;
+  }
+
+  /* Skeleton loaders: single column */
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Property result cards */
+  .property-result-card {
+    border-radius: 16px;
+  }
+
+  /* Dashboard cards */
+  .dashboard-card {
+    border-radius: 20px;
+    padding: 1.25rem;
+  }
+
+  /* Review summary cards */
+  .review-summary-card {
+    padding: 1rem;
+  }
+
+  /* Hero watermark: reduce size on mobile */
+  .hero-watermark {
+    font-size: 3rem !important;
+    opacity: 0.03 !important;
+  }
+
+  /* Location chips: wrap properly */
+  .premium-location-strip {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .premium-location-chip {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.75rem;
+  }
+
+  /* Trust section */
+  .premium-trust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Testimonials */
+  .testimonials-section .premium-heading p {
+    max-width: 100%;
+  }
+}
+
+/* --- Tablets (641px–1024px) --- */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    text-align: center;
+  }
+
+  .hero-left {
+    align-items: center;
+  }
+
+  .hero-title {
+    max-width: 20ch;
+  }
+
+  .hero-subtitle {
+    max-width: 45ch;
+  }
+
+  .hero-trust-chips {
+    justify-content: center;
+  }
+
+  .hero-actions {
+    justify-content: center;
+  }
+
+  .how-it-works-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .how-it-works-grid > :last-child {
+    grid-column: 1 / -1;
+    max-width: 50%;
+    margin: 0 auto;
+  }
+}
+
+/* --- iPad specific --- */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    padding-top: 6rem;
+  }
+
+  .property-registration-card {
+    width: min(700px, 95%);
+  }
+}
+
+/* --- iPhone notch / dynamic island safe areas --- */
+@supports (padding: env(safe-area-inset-top)) {
+  .premium-hero {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .premium-footer {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .global-loading-overlay {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* --- Reduce canvas animation intensity on mobile --- */
+@media (max-width: 640px) {
+  .morphing-blob-canvas {
+    opacity: 0.85;
+  }
+
+  .particle-constellation-container canvas {
+    opacity: 0.8;
+  }
+
+  /* Throttle complex animations on mobile */
+  .hero-glow-orb {
+    animation-duration: 20s !important;
+  }
+
+  .section-glow-orb {
+    animation-duration: 25s !important;
+  }
+}
+
+/* --- Prevent iOS rubber-band overflow --- */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* --- Print styles --- */
+@media print {
+  .morphing-blob-container,
+  .particle-constellation-container,
+  .global-loading-overlay,
+  .loading-bar,
+  .grain-overlay,
+  .hero-glow-orb,
+  .section-glow-orb,
+  .premium-motion-reveal {
+    display: none !important;
+  }
+}

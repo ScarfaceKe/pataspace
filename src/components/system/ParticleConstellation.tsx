@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useCanvasPerformance } from './useCanvasPerformance';
 
 /**
  * ParticleConstellation — Floating dots that connect with thin lines
@@ -37,6 +38,7 @@ export function ParticleConstellation({
   className = '',
 }: ParticleConstellationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const perf = useCanvasPerformance();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -44,8 +46,27 @@ export function ParticleConstellation({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // If user prefers reduced motion, skip animation entirely
+    if (perf.reducedMotion) {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * perf.dpr;
+      canvas.height = rect.height * perf.dpr;
+      ctx.scale(perf.dpr, perf.dpr);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      // Draw a few static dots
+      for (let i = 0; i < 12; i++) {
+        const x = Math.random() * rect.width;
+        const y = Math.random() * rect.height;
+        ctx.fillStyle = `rgba(${color}, 0.5)`;
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return;
+    }
+
     const isMobile = window.innerWidth < 600;
-    const particleCount = density ?? (isMobile ? 20 : 40);
+    const particleCount = density ?? (isMobile ? Math.round(20 * perf.densityMultiplier) : Math.round(40 * perf.densityMultiplier));
     const connectionDistance = isMobile ? 100 : 150;
 
     let particles: Particle[] = [];
@@ -54,11 +75,10 @@ export function ParticleConstellation({
     let animFrame = 0;
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas!.getBoundingClientRect();
-      canvas!.width = rect.width * dpr;
-      canvas!.height = rect.height * dpr;
-      ctx!.scale(dpr, dpr);
+      canvas!.width = rect.width * perf.dpr;
+      canvas!.height = rect.height * perf.dpr;
+      ctx!.scale(perf.dpr, perf.dpr);
       initParticles(rect.width, rect.height);
     }
 
@@ -76,8 +96,9 @@ export function ParticleConstellation({
     function render(time: number) {
       if (!running || !ctx || !canvas) return;
 
-      // Throttle to 30fps
-      if (time - lastTime < 33) {
+      // Throttle to 30fps (20fps on low-end)
+      const frameInterval = perf.isLowEnd ? 50 : 33;
+      if (time - lastTime < frameInterval) {
         animFrame = requestAnimationFrame(render);
         return;
       }

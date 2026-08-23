@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useCanvasPerformance } from './useCanvasPerformance';
 
 /**
  * Real Kenya boundary from Natural Earth / world.geo.json (simplified).
@@ -176,6 +177,7 @@ interface DotState {
 
 export function KenyaMapAnimation() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const perf = useCanvasPerformance();
   const stateRef = useRef<{
     dots: DotState[];
     animFrame: number;
@@ -200,12 +202,32 @@ export function KenyaMapAnimation() {
     stateRef.current = { dots, animFrame: 0, lastTime: 0 };
     let running = true;
 
+    // If user prefers reduced motion, draw once statically and stop
+    if (perf.reducedMotion) {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const padding = Math.min(w, h) * 0.06;
+      ctx.clearRect(0, 0, w, h);
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, padding);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+      const mapW = w - padding * 2;
+      const mapH = h - padding * 2;
+      for (const city of KENYA_CITY_DOTS) {
+        const x = padding + city.x * mapW;
+        const y = padding + city.y * mapH;
+        drawCityDot(ctx, x, y, 3.5, 0.7, 0.3, 12);
+      }
+      return;
+    }
+
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas!.getBoundingClientRect();
-      canvas!.width = rect.width * dpr;
-      canvas!.height = rect.height * dpr;
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas!.width = rect.width * perf.dpr;
+      canvas!.height = rect.height * perf.dpr;
+      ctx!.setTransform(perf.dpr, 0, 0, perf.dpr, 0, 0);
     }
 
     resize();
@@ -218,8 +240,9 @@ export function KenyaMapAnimation() {
       const w = rect.width;
       const h = rect.height;
 
-      // Throttle to ~30fps
-      if (time - state.lastTime < 33) {
+      // Throttle to ~30fps (20fps on low-end devices)
+      const frameInterval = perf.isLowEnd ? 50 : 33;
+      if (time - state.lastTime < frameInterval) {
         state.animFrame = requestAnimationFrame(render);
         return;
       }
@@ -262,7 +285,7 @@ export function KenyaMapAnimation() {
 
       // --- Draw pulsing city dots ---
       const isMobile = w < 600;
-      const maxDots = isMobile ? 8 : KENYA_CITY_DOTS.length;
+      const maxDots = isMobile ? 8 : perf.isLowEnd ? 10 : KENYA_CITY_DOTS.length;
 
       for (let i = 0; i < maxDots; i++) {
         const city = KENYA_CITY_DOTS[i];

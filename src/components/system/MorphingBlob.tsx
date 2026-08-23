@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useCanvasPerformance } from './useCanvasPerformance';
 
 /**
  * MorphingBlob — A smooth organic blob shape that continuously morphs.
@@ -96,6 +97,7 @@ export function MorphingBlob({
   className = '',
 }: MorphingBlobProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const perf = useCanvasPerformance();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -109,17 +111,17 @@ export function MorphingBlob({
     let lastFrame = 0;
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas!.width = size * dpr;
-      canvas!.height = size * dpr;
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas!.width = size * perf.dpr;
+      canvas!.height = size * perf.dpr;
+      ctx!.setTransform(perf.dpr, 0, 0, perf.dpr, 0, 0);
     }
 
     function render(timestamp: number) {
       if (!running || !ctx || !canvas) return;
 
-      // Throttle to ~30fps for smoothness without jank
-      if (timestamp - lastFrame < 33) {
+      // Throttle to ~30fps (20fps on low-end)
+      const frameInterval = perf.isLowEnd ? 50 : 33;
+      if (timestamp - lastFrame < frameInterval) {
         animFrame = requestAnimationFrame(render);
         return;
       }
