@@ -20,7 +20,7 @@ export type CommercialUnitTypeId =
   | 'hardware-shop'
   | 'office-shop-combination'
   | 'other-commercial-unit-type';
-export type ShopPricingCategoryId = 'small-shop' | 'medium-shop' | 'large-shop';
+export type ShopPricingCategoryId = 'small-shop' | 'medium-shop' | 'large-shop' | 'mixed-shop-property';
 
 export type ShopTypeId =
   | 'retail-shop'
@@ -203,7 +203,8 @@ export const COMMERCIAL_UNIT_TYPES: readonly CommercialUnitTypeOption[] = [
 export const SHOP_PRICING_CATEGORIES: readonly ShopPricingCategoryOption[] = [
   { id: 'small-shop', label: 'Small Shop', description: 'A small commercial shop space, typically a single room or kiosk.' },
   { id: 'medium-shop', label: 'Medium Shop', description: 'A medium-sized shop space with room for display and storage.' },
-  { id: 'large-shop', label: 'Large Shop', description: 'A large shop space with generous room for operations.' }
+  { id: 'large-shop', label: 'Large Shop', description: 'A large shop space with generous room for operations.' },
+  { id: 'mixed-shop-property', label: 'Mixed Shop Property', description: 'One building with different types of commercial spaces — select all that apply.' }
 ] as const;
 
 export const SHOP_SIZE_OPTIONS: readonly ShopPricingCategoryOption[] = SHOP_PRICING_CATEGORIES;
@@ -280,6 +281,16 @@ export const SHOP_PHOTO_GUIDANCE = [
 
 export function canRegisterShops(role: UserRoleId): boolean {
   return canRegisterProperties(role);
+}
+
+export function isMixedShopProperty(category: ShopPricingCategoryId): boolean {
+  return category === 'mixed-shop-property';
+}
+
+export function getAllowedCommercialUnitTypes(category: ShopPricingCategoryId): readonly CommercialUnitTypeOption[] {
+  return isMixedShopProperty(category)
+    ? COMMERCIAL_UNIT_TYPES
+    : COMMERCIAL_UNIT_TYPES.filter((item) => item.id === 'shop' || item.id === 'kiosk' || item.id === 'stall' || item.id === 'mini-shop');
 }
 
 export function shopWaterHasConnection(availability: ShopWaterAvailabilityId): boolean {

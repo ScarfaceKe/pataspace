@@ -5,6 +5,7 @@ import type { UserRoleId } from './types';
 
 export type ResidentialCategoryId =
   | 'single-room'
+  | 'double-room'
   | 'bedsitter'
   | 'one-bedroom'
   | 'two-bedroom'
@@ -133,6 +134,7 @@ export const HOUSE_REGISTRATION_FOUNDATION = {
 
 export const RESIDENTIAL_CATEGORIES: readonly ResidentialCategoryOption[] = [
   { id: 'single-room', label: 'Single Room', description: 'A single residential room.' },
+  { id: 'double-room', label: 'Double Room', description: 'A shared double room residential unit, typically two people sharing.' },
   { id: 'bedsitter', label: 'Bedsitter', description: 'A bedsitter residential unit.' },
   { id: 'one-bedroom', label: 'One Bedroom', description: 'A one bedroom residential unit.' },
   { id: 'two-bedroom', label: 'Two Bedroom', description: 'A two bedroom residential unit.' },

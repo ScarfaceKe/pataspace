@@ -14,6 +14,7 @@ import {
   ALL_HALL_DAYS,
   DAY_LABELS,
   createDefaultWorkingHours,
+  isMixedHallProperty,
   type HallAvailabilityAnswer,
   type HallCategoryId,
   type HallNearbyPlaceId,
@@ -43,6 +44,7 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
   const [hallName, setHallName] = useState('');
   const [unitNumber, setUnitNumber] = useState('');
   const [hallCategory, setHallCategory] = useState<HallCategoryId>('general-event-hall');
+  const [mixedHallCategories, setMixedHallCategories] = useState<HallCategoryId[]>([]);
   const [county, setCounty] = useState('');
   const [townOrCity, setTownOrCity] = useState('');
   const [estateOrArea, setEstateOrArea] = useState('');
@@ -75,6 +77,10 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
   const parsedHallIdentifiers = useMemo(() => {
     return hallIdentifiers.split(/[\n,]+/).map((x) => x.trim()).filter(Boolean);
   }, [hallIdentifiers]);
+
+  function toggleMixedHallCategory(id: HallCategoryId) {
+    setMixedHallCategories((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
 
   function selectEntrancePhotos(fileList: FileList | null) {
     if (!fileList) return;
@@ -113,7 +119,8 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
         hallSize,
         hallName,
         unitNumber,
-        hallCategory,
+        hallCategory: isMixedHallProperty(hallCategory) ? mixedHallCategories[0] ?? 'general-event-hall' : hallCategory,
+        mixedHallCategories: isMixedHallProperty(hallCategory) ? mixedHallCategories : undefined,
         location: { county, townOrCity, estateOrAreaOrNeighbourhood: estateOrArea, landmark, verification: locationVerification },
         roadVisibility,
         numberOfHalls: toNumberOrNull(numberOfHalls),
@@ -170,15 +177,32 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
     {step === 2 ? (
       <section className="auth-step" aria-labelledby="hall-category-title">
         <h2 id="hall-category-title">What kind of event space is this?</h2>
-        <p className="small-note">Choose the option that best describes the kind of events this space is suited for.</p>
-        <div className="property-category-grid">
-          {HALL_CATEGORIES.map((item) => (
-            <button key={item.id} type="button" className={hallCategory === item.id ? 'property-category-card active' : 'property-category-card'} onClick={() => setHallCategory(item.id)}>
-              <strong>{item.label}</strong>
-              <small>{item.description}</small>
-            </button>
-          ))}
-        </div>
+        {isMixedHallProperty(hallCategory) ? (
+          <>
+            <p className="small-note">Your venue has different types of event spaces. Select <strong>all</strong> that exist in your property.</p>
+            <div className="property-category-grid">
+              {HALL_CATEGORIES.filter((item) => item.id !== 'mixed-hall-category').map((item) => (
+                <button key={item.id} type="button" className={mixedHallCategories.includes(item.id) ? 'property-category-card active' : 'property-category-card'} onClick={() => toggleMixedHallCategory(item.id)}>
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </button>
+              ))}
+            </div>
+            <p className="small-note" style={{marginTop: '0.5rem'}}>{mixedHallCategories.length} of 7 hall types selected{mixedHallCategories.length === 0 ? ' — please select at least one' : ''}</p>
+          </>
+        ) : (
+          <>
+            <p className="small-note">Choose the option that best describes the kind of events this space is suited for.</p>
+            <div className="property-category-grid">
+              {HALL_CATEGORIES.map((item) => (
+                <button key={item.id} type="button" className={hallCategory === item.id ? 'property-category-card active' : 'property-category-card'} onClick={() => setHallCategory(item.id)}>
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </section>
     ) : null}
 

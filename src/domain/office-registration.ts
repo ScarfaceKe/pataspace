@@ -3,7 +3,7 @@ import type { ElectricityInformationInput, PropertyLocationInput, PropertyOwners
 import { canRegisterProperties } from './property-registration';
 import type { UserRoleId } from './types';
 
-export type OfficeTypeId = 'private-office' | 'shared-office' | 'small-office' | 'medium-office' | 'large-office';
+export type OfficeTypeId = 'private-office' | 'shared-office' | 'small-office' | 'medium-office' | 'large-office' | 'mixed-office-type';
 export type OfficeRoadVisibilityId =
   | 'facing-main-road'
   | 'along-main-road'
@@ -85,8 +85,19 @@ export const OFFICE_TYPES: readonly OfficeTypeOption[] = [
   { id: 'shared-office', label: 'Shared Office', description: 'A shared office or coworking-style space.' },
   { id: 'small-office', label: 'Small Office', description: 'A compact office for a small team.' },
   { id: 'medium-office', label: 'Medium Office', description: 'A medium-sized office for a growing team.' },
-  { id: 'large-office', label: 'Large Office', description: 'A larger office space for bigger teams or operations.' }
+  { id: 'large-office', label: 'Large Office', description: 'A larger office space for bigger teams or operations.' },
+  { id: 'mixed-office-type', label: 'Mixed Office Property', description: 'One building with different types of offices — select all that apply.' }
 ] as const;
+
+export function isMixedOfficeProperty(type: OfficeTypeId): boolean {
+  return type === 'mixed-office-type';
+}
+
+export function getAllowedOfficeTypes(type: OfficeTypeId): readonly OfficeTypeOption[] {
+  return isMixedOfficeProperty(type)
+    ? OFFICE_TYPES.filter((item) => item.id !== 'mixed-office-type')
+    : OFFICE_TYPES.filter((item) => item.id === type);
+}
 
 export const OFFICE_ROAD_VISIBILITY_OPTIONS: readonly OfficeRoadVisibilityOption[] = [
   { id: 'facing-main-road', label: 'Facing the Main Road' },

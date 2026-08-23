@@ -68,6 +68,7 @@ export function DashboardShell({ profile, title }: { profile: AuthProfileFoundat
               <a className="secondary-action" href="/properties/register/shop">Register shop</a>
               <a className="secondary-action" href="/properties/register/office">Register office</a>
               <a className="secondary-action" href="/properties/register/event-hall">Register event hall</a>
+              <a className="secondary-action" href="/properties/register/mixed-use-building">Register mixed-use building</a>
               <a className="secondary-action" href="/properties/register">Register other property</a>
             </>
           ) : null}

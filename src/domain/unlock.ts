@@ -12,15 +12,16 @@ export type UnlockAccessStatus = 'pending-payment' | 'active' | 'unavailable-aft
 export const UNLOCK_THIS_LISTING_VALIDITY_HOURS = 24 as const;
 
 export type ResidentialUnlockCategory = ResidentialCategoryId;
-export type ShopUnlockCategory = 'small-shop' | 'medium-shop' | 'large-shop';
-export type OfficeUnlockCategory = 'shared-office' | 'small-office' | 'medium-office' | 'large-office' | 'executive-office';
+export type ShopUnlockCategory = 'small-shop' | 'medium-shop' | 'large-shop' | 'mixed-shop-property';
+export type OfficeUnlockCategory = 'shared-office' | 'small-office' | 'medium-office' | 'large-office' | 'executive-office' | 'mixed-office-type';
 export type EventHallUnlockCategory =
   | 'small-event-hall'
   | 'medium-event-hall'
   | 'large-event-hall'
   | 'conference-hall'
   | 'wedding-garden-outdoor-event-venue'
-  | 'multi-purpose-hall';
+  | 'multi-purpose-hall'
+  | 'mixed-hall-category';
 
 export interface PriceAmount {
   currency: CurrencyCode;
@@ -82,6 +83,7 @@ export const RESIDENTIAL_UNLOCK_PRICING: readonly PricingRow<ResidentialUnlockCa
   { category: 'four-bedroom', label: 'Four Bedroom', unlockThisListing: kes(120), verifiedAccess72Hours: kes(400) },
   { category: 'five-bedroom', label: 'Five Bedroom', unlockThisListing: kes(140), verifiedAccess72Hours: kes(500) },
   { category: 'maisonette', label: 'Maisonette', unlockThisListing: kes(140), verifiedAccess72Hours: kes(500) },
+  { category: 'double-room', label: 'Double Room', unlockThisListing: kes(30), verifiedAccess72Hours: kes(150) },
   { category: 'bungalow', label: 'Bungalow', unlockThisListing: kes(140), verifiedAccess72Hours: kes(500) },
   { category: 'mixed-residential-property', label: 'Mixed Residential', unlockThisListing: kes(160), verifiedAccess72Hours: kes(500) }
 ] as const;
@@ -89,7 +91,8 @@ export const RESIDENTIAL_UNLOCK_PRICING: readonly PricingRow<ResidentialUnlockCa
 export const SHOP_UNLOCK_PRICING: readonly PricingRow<ShopUnlockCategory>[] = [
   { category: 'small-shop', label: 'Small Shop', unlockThisListing: kes(50), verifiedAccess72Hours: kes(250) },
   { category: 'medium-shop', label: 'Medium Shop', unlockThisListing: kes(100), verifiedAccess72Hours: kes(400) },
-  { category: 'large-shop', label: 'Large Shop', unlockThisListing: kes(200), verifiedAccess72Hours: kes(700) }
+  { category: 'large-shop', label: 'Large Shop', unlockThisListing: kes(200), verifiedAccess72Hours: kes(700) },
+  { category: 'mixed-shop-property', label: 'Mixed Shop Property', unlockThisListing: kes(100), verifiedAccess72Hours: kes(400) }
 ] as const;
 
 export const OFFICE_UNLOCK_PRICING: readonly PricingRow<OfficeUnlockCategory>[] = [
@@ -97,7 +100,8 @@ export const OFFICE_UNLOCK_PRICING: readonly PricingRow<OfficeUnlockCategory>[] 
   { category: 'small-office', label: 'Small Office', unlockThisListing: kes(100), verifiedAccess72Hours: kes(500) },
   { category: 'medium-office', label: 'Medium Office', unlockThisListing: kes(200), verifiedAccess72Hours: kes(700) },
   { category: 'large-office', label: 'Large Office', unlockThisListing: kes(300), verifiedAccess72Hours: kes(1000) },
-  { category: 'executive-office', label: 'Executive Office', unlockThisListing: kes(500), verifiedAccess72Hours: kes(1500) }
+  { category: 'executive-office', label: 'Executive Office', unlockThisListing: kes(500), verifiedAccess72Hours: kes(1500) },
+  { category: 'mixed-office-type', label: 'Mixed Office Property', unlockThisListing: kes(200), verifiedAccess72Hours: kes(700) }
 ] as const;
 
 export const EVENT_HALL_UNLOCK_PRICING: readonly PricingRow<EventHallUnlockCategory>[] = [
@@ -106,7 +110,8 @@ export const EVENT_HALL_UNLOCK_PRICING: readonly PricingRow<EventHallUnlockCateg
   { category: 'large-event-hall', label: 'Large Event Hall', unlockThisListing: kes(100), verifiedAccess72Hours: kes(200) },
   { category: 'conference-hall', label: 'Conference Hall', unlockThisListing: kes(100), verifiedAccess72Hours: kes(200) },
   { category: 'wedding-garden-outdoor-event-venue', label: 'Wedding Garden / Outdoor Event Venue', unlockThisListing: kes(100), verifiedAccess72Hours: kes(200) },
-  { category: 'multi-purpose-hall', label: 'Multi-Purpose Hall', unlockThisListing: kes(50), verifiedAccess72Hours: kes(100) }
+  { category: 'multi-purpose-hall', label: 'Multi-Purpose Hall', unlockThisListing: kes(50), verifiedAccess72Hours: kes(100) },
+  { category: 'mixed-hall-category', label: 'Mixed Event Venue', unlockThisListing: kes(50), verifiedAccess72Hours: kes(100) }
 ] as const;
 
 export const UNLOCK_THIS_LISTING_FOUNDATION = {

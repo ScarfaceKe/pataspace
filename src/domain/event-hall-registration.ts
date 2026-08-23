@@ -3,7 +3,7 @@ import type { PropertyLocationInput, PropertyOwnershipRole, PropertyRegistration
 import { canRegisterProperties } from './property-registration';
 import type { UserRoleId } from './types';
 
-export type HallCategoryId = 'wedding-hall' | 'meeting-hall' | 'training-hall' | 'church-event-hall' | 'party-hall' | 'community-hall' | 'general-event-hall';
+export type HallCategoryId = 'wedding-hall' | 'meeting-hall' | 'training-hall' | 'church-event-hall' | 'party-hall' | 'community-hall' | 'general-event-hall' | 'mixed-hall-category';
 export type HallSizeId = 'small' | 'medium' | 'large';
 export type HallRoadVisibilityId = 'facing-main-road' | 'along-main-road' | 'facing-inner-road' | 'along-inner-road' | 'inside-commercial-building' | 'inside-shopping-complex' | 'inside-estate' | 'other';
 export type HallAvailabilityAnswer = 'yes' | 'no';
@@ -101,8 +101,19 @@ export const HALL_CATEGORIES: readonly HallCategoryOption[] = [
   { id: 'church-event-hall', label: 'Church Event Hall', description: 'A hall suitable for church or fellowship events.' },
   { id: 'party-hall', label: 'Party Hall', description: 'A hall suitable for parties and celebrations.' },
   { id: 'community-hall', label: 'Community Hall', description: 'A hall suitable for community events.' },
-  { id: 'general-event-hall', label: 'General Event Hall', description: 'A general-purpose event hall.' }
+  { id: 'general-event-hall', label: 'General Event Hall', description: 'A general-purpose event hall.' },
+  { id: 'mixed-hall-category', label: 'Mixed Event Venue', description: 'One venue with different types of halls — select all that apply.' }
 ] as const;
+
+export function isMixedHallProperty(category: HallCategoryId): boolean {
+  return category === 'mixed-hall-category';
+}
+
+export function getAllowedHallCategories(category: HallCategoryId): readonly HallCategoryOption[] {
+  return isMixedHallProperty(category)
+    ? HALL_CATEGORIES.filter((item) => item.id !== 'mixed-hall-category')
+    : HALL_CATEGORIES.filter((item) => item.id === category);
+}
 
 export const HALL_ROAD_VISIBILITY_OPTIONS: readonly HallRoadVisibilityOption[] = [
   { id: 'facing-main-road', label: 'Facing the Main Road' },

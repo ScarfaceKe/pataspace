@@ -13,6 +13,7 @@ import {
   OFFICE_ROAD_VISIBILITY_OPTIONS,
   OFFICE_TYPES,
   OFFICE_WATER_AVAILABILITY_OPTIONS,
+  isMixedOfficeProperty,
   officeWaterHasConnection,
   type OfficeDepositStructureId,
   type OfficeNearbyPlaceId,
@@ -38,6 +39,7 @@ export function OfficeRegistrationForm({ profileRole }: { profileRole: UserRoleI
   const [step, setStep] = useState(1);
   const [locationVerification, setLocationVerification] = useState<PropertyLocationVerification | undefined>();
   const [officeType, setOfficeType] = useState<OfficeTypeId>('private-office');
+  const [mixedOfficeTypes, setMixedOfficeTypes] = useState<OfficeTypeId[]>([]);
   const [county, setCounty] = useState('');
   const [townOrCity, setTownOrCity] = useState('');
   const [estateOrArea, setEstateOrArea] = useState('');
@@ -88,6 +90,10 @@ export function OfficeRegistrationForm({ profileRole }: { profileRole: UserRoleI
 
   const parsedFloorCount = useMemo(() => getFloorCountWithGroundFloor(toNumberOrNull(numberOfFloors)), [numberOfFloors]);
 
+  function toggleMixedOfficeType(id: OfficeTypeId) {
+    setMixedOfficeTypes((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
   function selectEntrancePhotos(fileList: FileList | null) {
     if (!fileList) return;
     const files = Array.from(fileList);
@@ -117,9 +123,9 @@ export function OfficeRegistrationForm({ profileRole }: { profileRole: UserRoleI
   async function save(action: PropertyRegistrationAction) {
     setSavingAction(action); setErrors({}); setMessage(action === 'save-draft' ? 'Saving your office draft...' : 'Submitting office property...');
     const response = await fetch('/api/offices/register', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        officeType,
+      method: 'POST', headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({
+        officeType: isMixedOfficeProperty(officeType) ? mixedOfficeTypes[0] ?? 'private-office' : officeType,
+        mixedOfficeTypes: isMixedOfficeProperty(officeType) ? mixedOfficeTypes : undefined,
         location: { county, townOrCity, estateOrAreaOrNeighbourhood: estateOrArea, landmark, verification: locationVerification },
         roadVisibility,
         officeName,
@@ -164,7 +170,7 @@ export function OfficeRegistrationForm({ profileRole }: { profileRole: UserRoleI
       <ListingWhatsAppSupport context="listing" />
       <div className="progress-steps" aria-label="Office registration progress">{Array.from({ length: totalSteps }, (_, index) => index + 1).map((item) => <button key={item} type="button" className={step === item ? 'step active' : 'step'} onClick={() => setStep(item)} aria-current={step === item ? 'step' : undefined}>{item}</button>)}</div>
 
-      {step === 1 ? <section className="auth-step"><h2>What type of office space are you registering?</h2><div className="property-category-grid">{OFFICE_TYPES.map((item) => <button key={item.id} type="button" className={officeType === item.id ? 'property-category-card active' : 'property-category-card'} onClick={() => setOfficeType(item.id)} aria-pressed={officeType === item.id}><strong>{item.label}</strong><small>{item.description}</small></button>)}</div>{errors.officeType ? <p className="field-error">{errors.officeType}</p> : null}</section> : null}
+      {step === 1 ? <section className="auth-step"><h2>What type of office space are you registering?</h2>{isMixedOfficeProperty(officeType) ? <p className="small-note">Your building has different types of offices. Select <strong>all</strong> office types that exist in your property.</p> : null}<div className="property-category-grid">{OFFICE_TYPES.map((item) => isMixedOfficeProperty(officeType) ? <button key={item.id} type="button" className={mixedOfficeTypes.includes(item.id) ? 'property-category-card active' : 'property-category-card'} onClick={() => item.id !== 'mixed-office-type' ? toggleMixedOfficeType(item.id) : setOfficeType(item.id)} aria-pressed={mixedOfficeTypes.includes(item.id)}><strong>{item.label}</strong><small>{item.description}</small></button> : <button key={item.id} type="button" className={officeType === item.id ? 'property-category-card active' : 'property-category-card'} onClick={() => setOfficeType(item.id)} aria-pressed={officeType === item.id}><strong>{item.label}</strong><small>{item.description}</small></button>)}</div>{isMixedOfficeProperty(officeType) ? <p className="small-note" style={{marginTop: '0.5rem'}}>{mixedOfficeTypes.length} of 5 office types selected{mixedOfficeTypes.length === 0 ? ' — please select at least one' : ''}</p> : null}{errors.officeType ? <p className="field-error">{errors.officeType}</p> : null}</section> : null}
 
       {step === 2 ? <section className="auth-step"><h2>Property Location</h2><label className="field-label">County<input list="kenya-counties" value={county} onChange={(e) => setCounty(e.target.value)} placeholder="Nairobi" />{errors.county ? <span>{errors.county}</span> : null}</label><label className="field-label">Town / City<input list="known-kenya-locations" value={townOrCity} onChange={(e) => setTownOrCity(e.target.value)} placeholder="Nairobi" />{errors.townOrCity ? <span>{errors.townOrCity}</span> : null}</label><label className="field-label">Estate / Area<input list="known-kenya-locations" value={estateOrArea} onChange={(e) => setEstateOrArea(e.target.value)} placeholder="Westlands" />{errors.estateOrArea ? <span>{errors.estateOrArea}</span> : null}</label><label className="field-label">Landmark (optional)<input value={landmark} onChange={(e) => setLandmark(e.target.value)} placeholder="Near a known landmark" /></label><ListingWhatsAppSupport context="location" /><PropertyLocationVerificationStep value={locationVerification} onChange={setLocationVerification} onSuggestedAddress={(suggested) => { if (suggested.county && !county) setCounty(suggested.county); if (suggested.town && !townOrCity) setTownOrCity(suggested.town); if (suggested.estate && !estateOrArea) setEstateOrArea(suggested.estate); if (suggested.road && !landmark) setLandmark(suggested.road); }} /><datalist id="kenya-counties">{KENYA_COUNTIES.map((item) => <option key={item} value={item} />)}</datalist><datalist id="known-kenya-locations">{KNOWN_KENYA_LOCATION_TERMS.map((item) => <option key={item} value={item} />)}</datalist></section> : null}
 

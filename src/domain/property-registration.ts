@@ -232,6 +232,7 @@ export const PROPERTY_REGISTRATION_FOUNDATION = {
     'Shop Registration',
     'Office Registration',
     'Hall Registration',
+    'Mixed-Use Building Registration',
     'Verification System',
     'Vacancy Verification',
     'Match Engines',
@@ -267,6 +268,14 @@ export const PROPERTY_REGISTRATION_CATEGORIES: readonly PropertyRegistrationCate
     description: 'Register an event hall for future capacity and event suitability details.'
   }
 ] as const;
+
+export const MIXED_USE_BUILDING_REGISTRATION_CATEGORY = {
+  id: 'mixed-use-building' as const,
+  icon: '🏙️',
+  label: 'Mixed-Use Building',
+  description: 'Register a building with shops, offices, halls, and/or residential units under one roof.',
+  href: '/properties/register/mixed-use-building',
+} as const;
 
 export const PROPERTY_STATUS_OPTIONS: readonly PropertyStatus[] = [
   'draft', 'active', 'waiting-for-verification', 'occupied'

@@ -17,6 +17,7 @@ import {
   SHOP_REGISTRATION_FOUNDATION,
   SHOP_TYPES,
   SHOP_WATER_AVAILABILITY_OPTIONS,
+  isMixedShopProperty,
   shopWaterHasConnection,
   type BusinessSuitabilityId,
   type CommercialUnitTypeId,
@@ -58,6 +59,7 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
   const [shopTypes, setShopTypes] = useState<ShopTypeId[]>(['retail-shop']);
   const [commercialUnitType, setCommercialUnitType] = useState<CommercialUnitTypeId>('shop');
   const [customCommercialUnitType, setCustomCommercialUnitType] = useState('');
+  const [mixedCommercialUnitTypes, setMixedCommercialUnitTypes] = useState<CommercialUnitTypeId[]>([]);
   const [county, setCounty] = useState('');
   const [townOrCity, setTownOrCity] = useState('');
   const [estateOrArea, setEstateOrArea] = useState('');
@@ -119,6 +121,10 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
     });
   }
 
+  function toggleMixedCommercialUnitType(id: CommercialUnitTypeId) {
+    setMixedCommercialUnitTypes((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
   function toggleBusiness(id: BusinessSuitabilityId) {
     setBusinessSuitability((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   }
@@ -156,13 +162,13 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
 
     const response = await fetch('/api/shops/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({
         shopSize,
         shopType: shopTypes,
-        commercialUnitType,
+        commercialUnitType: isMixedShopProperty(shopSize) ? mixedCommercialUnitTypes[0] ?? 'shop' : commercialUnitType,
         customCommercialUnitType,
-        pricingCategory: shopSize,
+        mixedCommercialUnitTypes: isMixedShopProperty(shopSize) ? mixedCommercialUnitTypes : undefined,
+        pricingCategory: isMixedShopProperty(shopSize) ? 'medium-shop' : shopSize,
         location: { county, townOrCity, estateOrAreaOrNeighbourhood: estateOrArea, landmark, verification: locationVerification },
         roadVisibility,
         shopName,
@@ -253,7 +259,7 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
               </button>
             ))}
           </div>
-          <p className="small-note" style={{marginTop: '0.75rem', opacity: 0.6}}>Pricing Category: {shopSize === 'small-shop' ? 'Small Shop' : shopSize === 'medium-shop' ? 'Medium Shop' : 'Large Shop'}</p>
+          <p className="small-note" style={{marginTop: '0.75rem', opacity: 0.6}}>{isMixedShopProperty(shopSize) ? 'Mixed property — different commercial spaces in one building' : `Pricing Category: ${shopSize === 'small-shop' ? 'Small Shop' : shopSize === 'medium-shop' ? 'Medium Shop' : 'Large Shop'}`}</p>
           {errors.shopSize ? <p className="field-error">{errors.shopSize}</p> : null}
           {errors.pricingCategory ? <p className="field-error">{errors.pricingCategory}</p> : null}
         </section>
@@ -262,22 +268,40 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
       {/* Step 2: Commercial Unit Type Identification — Simplified, plain language */}
       {step === 2 ? (
         <section className="auth-step" aria-labelledby="commercial-unit-type-title">
-          <h2 id="commercial-unit-type-title">Commercial Unit Type Identification</h2>
-          <p className="small-note">What does the space look like? Choose the option that best describes the layout and size of your shop.</p>
-          <div className="business-toggle-grid">
-            {COMMERCIAL_UNIT_TYPES.map((item) => (
-              <button key={item.id} type="button" className={commercialUnitType === item.id ? 'business-toggle active' : 'business-toggle'} onClick={() => setCommercialUnitType(item.id)} aria-pressed={commercialUnitType === item.id}>
-                <strong>{item.label}</strong>
-                <small>{item.description}</small>
-              </button>
-            ))}
-          </div>
-          {commercialUnitType === 'other-commercial-unit-type' ? (
-            <label className="field-label">Custom commercial unit type
-              <input value={customCommercialUnitType} onChange={(event) => setCustomCommercialUnitType(event.target.value)} placeholder="Enter the commercial unit type" />
-              {errors.customCommercialUnitType ? <span>{errors.customCommercialUnitType}</span> : null}
-            </label>
-          ) : null}
+          <h2 id="commercial-unit-type-title">What kind of commercial space is this?</h2>
+          {isMixedShopProperty(shopSize) ? (
+            <>
+              <p className="small-note">Your building has different types of commercial spaces. Select <strong>all</strong> that exist in your property.</p>
+              <div className="business-toggle-grid">
+                {COMMERCIAL_UNIT_TYPES.map((item) => (
+                  <button key={item.id} type="button" className={mixedCommercialUnitTypes.includes(item.id) ? 'business-toggle active' : 'business-toggle'} onClick={() => toggleMixedCommercialUnitType(item.id)} aria-pressed={mixedCommercialUnitTypes.includes(item.id)}>
+                    <strong>{item.label}</strong>
+                    <small>{item.description}</small>
+                  </button>
+                ))}
+              </div>
+              <p className="small-note" style={{marginTop: '0.5rem'}}>{mixedCommercialUnitTypes.length} of {COMMERCIAL_UNIT_TYPES.length} selected</p>
+              {mixedCommercialUnitTypes.length === 0 ? <p className="field-error">Please select at least one commercial unit type.</p> : null}
+            </>
+          ) : (
+            <>
+              <p className="small-note">What does the space look like? Choose the option that best describes the layout and size of your shop.</p>
+              <div className="business-toggle-grid">
+                {COMMERCIAL_UNIT_TYPES.map((item) => (
+                  <button key={item.id} type="button" className={commercialUnitType === item.id ? 'business-toggle active' : 'business-toggle'} onClick={() => setCommercialUnitType(item.id)} aria-pressed={commercialUnitType === item.id}>
+                    <strong>{item.label}</strong>
+                    <small>{item.description}</small>
+                  </button>
+                ))}
+              </div>
+              {commercialUnitType === 'other-commercial-unit-type' ? (
+                <label className="field-label">Custom commercial unit type
+                  <input value={customCommercialUnitType} onChange={(event) => setCustomCommercialUnitType(event.target.value)} placeholder="Enter the commercial unit type" />
+                  {errors.customCommercialUnitType ? <span>{errors.customCommercialUnitType}</span> : null}
+                </label>
+              ) : null}
+            </>
+          )}
           {errors.commercialUnitType ? <p className="field-error">{errors.commercialUnitType}</p> : null}
         </section>
       ) : null}
