@@ -45,7 +45,8 @@ export const REVIEW_CATEGORIES_BY_PROPERTY: Record<PropertyCategoryId, readonly 
   houses: ['accuracy-of-listing', 'cleanliness', 'property-condition', 'security', 'accessibility', 'value-for-money', 'customer-service', 'communication', 'overall-experience'],
   shops: ['accuracy-of-listing', 'property-condition', 'security', 'accessibility', 'value-for-money', 'customer-service', 'communication', 'overall-experience'],
   offices: ['accuracy-of-listing', 'cleanliness', 'property-condition', 'security', 'accessibility', 'value-for-money', 'customer-service', 'communication', 'overall-experience'],
-  'event-halls': ['accuracy-of-listing', 'cleanliness', 'property-condition', 'security', 'accessibility', 'value-for-money', 'customer-service', 'communication', 'overall-experience']
+  'event-halls': ['accuracy-of-listing', 'cleanliness', 'property-condition', 'security', 'accessibility', 'value-for-money', 'customer-service', 'communication', 'overall-experience'],
+  'mixed-use-building': ['accuracy-of-listing', 'cleanliness', 'property-condition', 'security', 'accessibility', 'value-for-money', 'customer-service', 'communication', 'overall-experience']
 };
 
 export const REVIEWS_FOUNDATION = {

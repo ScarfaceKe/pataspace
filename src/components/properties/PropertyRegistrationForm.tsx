@@ -7,6 +7,7 @@ import type { PropertyLocationVerification } from '@/domain/location-verificatio
 import {
   PROPERTY_DESCRIPTION_LABEL,
   PROPERTY_REGISTRATION_CATEGORIES,
+  MIXED_USE_BUILDING_REGISTRATION_CATEGORY,
   getRegistrationResponsibilityCopy,
   type PropertyOwnershipRole,
   type PropertyRegistrationCategoryId,
@@ -161,6 +162,18 @@ export function PropertyRegistrationForm({ profileRole }: PropertyRegistrationFo
                 <small>{item.description}</small>
               </button>
             ))}
+            <button
+              type="button"
+              className={category === MIXED_USE_BUILDING_REGISTRATION_CATEGORY.id ? 'property-category-card active' : 'property-category-card'}
+              onClick={() => setCategory(MIXED_USE_BUILDING_REGISTRATION_CATEGORY.id)}
+              aria-pressed={category === MIXED_USE_BUILDING_REGISTRATION_CATEGORY.id}
+            >
+              <span aria-hidden="true">{MIXED_USE_BUILDING_REGISTRATION_CATEGORY.icon}</span>
+              <strong>{MIXED_USE_BUILDING_REGISTRATION_CATEGORY.label}</strong>
+              <small>
+                A building that has more than one type of space under one roof — for example shops on the ground floor, offices upstairs, and halls on another floor. Register all unit types at once under one property listing.
+              </small>
+            </button>
           </div>
           {category === 'houses' ? (
             <a className="primary-action" href="/properties/register/house">Continue to House Registration</a>
@@ -173,6 +186,9 @@ export function PropertyRegistrationForm({ profileRole }: PropertyRegistrationFo
           ) : null}
           {category === 'event-halls' ? (
             <a className="primary-action" href="/properties/register/event-hall">Continue to Event Hall Registration</a>
+          ) : null}
+          {category === 'mixed-use-building' ? (
+            <a className="primary-action" href="/properties/register/mixed-use-building">Continue to Mixed-Use Building Registration</a>
           ) : null}
           {errors.category ? <p className="field-error">{errors.category}</p> : null}
         </section>

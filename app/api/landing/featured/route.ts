@@ -25,6 +25,7 @@ const CATEGORY_META: Record<PropertyCategoryId, { name: string; icon: string }> 
   shops: { name: 'Shop', icon: '🏪' },
   offices: { name: 'Office', icon: '🏢' },
   'event-halls': { name: 'Event Hall', icon: '🎉' },
+  'mixed-use-building': { name: 'Mixed-Use Building', icon: '🏙️' },
 };
 
 function resolveUnlockPrice(property: { category: PropertyCategoryId; id: string }, unitIdentifier?: string): number {
@@ -47,6 +48,7 @@ function getDefaultPricingCategory(category: PropertyCategoryId): ResidentialUnl
     case 'shops': return 'medium-shop';
     case 'offices': return 'small-office';
     case 'event-halls': return 'medium-event-hall';
+    case 'mixed-use-building': return 'one-bedroom';
   }
 }
 

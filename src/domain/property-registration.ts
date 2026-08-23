@@ -304,7 +304,7 @@ export const MIXED_USE_BUILDING_REGISTRATION_CATEGORY = {
   id: 'mixed-use-building' as const,
   icon: '🏙️',
   label: 'Mixed-Use Building',
-  description: 'Register a building with shops, offices, halls, and/or residential units under one roof.',
+  description: 'A building with different types of spaces under one roof — for example a shop on the ground floor, offices upstairs, and a hall on another floor. Register all units at once under one property listing.',
   href: '/properties/register/mixed-use-building',
 } as const;
 

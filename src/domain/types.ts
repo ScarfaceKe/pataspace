@@ -1,6 +1,6 @@
 export type KenyaScope = 'KE';
 
-export type PropertyCategoryId = 'houses' | 'shops' | 'offices' | 'event-halls';
+export type PropertyCategoryId = 'houses' | 'shops' | 'offices' | 'event-halls' | 'mixed-use-building';
 
 export type HouseTypeId =
   | 'single-room'
