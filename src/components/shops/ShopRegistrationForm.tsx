@@ -5,7 +5,7 @@ import { ListingWhatsAppSupport } from '@/components/support/ListingWhatsAppSupp
 import type { PropertyLocationVerification } from '@/domain/location-verification';
 import { useMemo, useState } from 'react';
 import { KENYA_COUNTIES, KNOWN_KENYA_LOCATION_TERMS } from '@/domain/kenya-location-intelligence';
-import { getRegistrationResponsibilityCopy, getFloorCountWithGroundFloor, type PropertyOwnershipRole, type PropertyRegistrationAction } from '@/domain/property-registration';
+import { getRegistrationResponsibilityCopy, getFloorCountWithGroundFloor, ADDITIONAL_FLOOR_LOCATIONS, type PropertyOwnershipRole, type PropertyRegistrationAction, type AdditionalFloorLocationId } from '@/domain/property-registration';
 import {
   BUSINESS_SUITABILITY_OPTIONS,
   COMMERCIAL_UNIT_TYPES,
@@ -69,6 +69,9 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
   const [unitNumber, setUnitNumber] = useState('');
   const [numberOfShopUnits, setNumberOfShopUnits] = useState('');
   const [numberOfFloors, setNumberOfFloors] = useState('');
+  const [hasBasement, setHasBasement] = useState(false);
+  const [hasMezzanine, setHasMezzanine] = useState(false);
+  const [hasRooftop, setHasRooftop] = useState(false);
   const [vacantShopFloor, setVacantShopFloor] = useState('');
   const [monthlyRent, setMonthlyRent] = useState('');
   const [depositStructure, setDepositStructure] = useState<DepositStructureId>('one-month');
@@ -175,6 +178,11 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
         unitNumber,
         numberOfShopUnits: toNumberOrNull(numberOfShopUnits),
         numberOfFloors: toNumberOrNull(numberOfFloors),
+        additionalFloorLocations: [
+          ...(hasBasement ? ['basement'] as const : []),
+          ...(hasMezzanine ? ['mezzanine'] as const : []),
+          ...(hasRooftop ? ['rooftop'] as const : []),
+        ],
         vacantShopFloor: toNumberOrNull(vacantShopFloor),
         rent: { monthlyRent: toNumberOrNull(monthlyRent), depositStructure, depositAmount: toNumberOrNull(depositAmount) },
         hasVacantShopUnits,
@@ -391,10 +399,34 @@ export function ShopRegistrationForm({ profileRole }: ShopRegistrationFormProps)
             {numberOfFloors ? <span className="small-note" style={{color: 'var(--text-secondary, #64748b)'}}>{parsedFloorCount}</span> : null}
             {errors.numberOfFloors ? <span>{errors.numberOfFloors}</span> : null}
           </label>
+          <div style={{marginTop: '0.75rem'}}>
+            <span className="field-label" style={{display: 'block', marginBottom: '0.5rem'}}>  Does this property have any of the following additional levels?
+              <span style={{fontSize: '0.8rem', color: 'var(--text-secondary, #64748b)', display: 'block', fontWeight: 400, marginTop: '0.25rem'}}>
+                Select all that apply. These levels will be permanently recorded with your listing.
+              </span>
+            </span>
+            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+              {ADDITIONAL_FLOOR_LOCATIONS.map((loc) => {
+                const isActive = loc.id === 'basement' ? hasBasement : loc.id === 'mezzanine' ? hasMezzanine : hasRooftop;
+                const toggle = loc.id === 'basement' ? setHasBasement : loc.id === 'mezzanine' ? setHasMezzanine : setHasRooftop;
+                return (
+                  <button key={loc.id} type="button" onClick={() => toggle(!isActive)}
+                    style={{padding: '0.5rem 1rem', borderRadius: '9999px', border: isActive ? '2px solid var(--primary, #10b981)' : '2px solid var(--border, #e2e8f0)', background: isActive ? 'var(--primary-light, #ecfdf5)' : 'white', color: isActive ? 'var(--primary, #10b981)' : 'var(--text-secondary, #64748b)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.15s ease'}}>
+                    {isActive ? '\u2713 ' : ''}{loc.label}
+                  </button>
+                );
+              })}
+            </div>
+            {(hasBasement || hasMezzanine || hasRooftop) ? (
+              <span className="small-note" style={{color: 'var(--primary, #10b981)', marginTop: '0.5rem', display: 'block'}}>
+                These additional levels are now part of your property record and will appear in search results, match details, and listing information.
+              </span>
+            ) : null}
+          </div>
           {hasVacantShopUnits === 'yes' ? (
             <label className="field-label">Floor where vacant shop exists (if applicable)
               <input type="number" min="0" inputMode="numeric" value={vacantShopFloor} onChange={(event) => setVacantShopFloor(event.target.value)} placeholder="Ground floor = 0" />
-              <span className="small-note">Basement, mezzanine, and rooftop locations are also valid.</span>
+              <span className="small-note">You can also enter basement, mezzanine, or rooftop if applicable.</span>
               {errors.vacantShopFloor ? <span>{errors.vacantShopFloor}</span> : null}
             </label>
           ) : null}

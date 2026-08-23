@@ -89,6 +89,24 @@ export interface DailyVacancyVerificationFoundation {
   nextConfirmationDueAt?: string;
 }
 
+export type AdditionalFloorLocationId = 'basement' | 'mezzanine' | 'rooftop';
+
+export interface AdditionalFloorLocation {
+  id: AdditionalFloorLocationId;
+  label: string;
+  description: string;
+}
+
+export const ADDITIONAL_FLOOR_LOCATIONS: readonly AdditionalFloorLocation[] = [
+  { id: 'basement', label: 'Basement', description: 'A level below the ground floor.' },
+  { id: 'mezzanine', label: 'Mezzanine', description: 'A split level between the ground and first floor.' },
+  { id: 'rooftop', label: 'Rooftop', description: 'A level on the roof of the building.' },
+] as const;
+
+export function getAdditionalFloorLocationById(id: AdditionalFloorLocationId): AdditionalFloorLocation | undefined {
+  return ADDITIONAL_FLOOR_LOCATIONS.find((loc) => loc.id === id);
+}
+
 export interface PropertyRegistrationInput {
   category: PropertyRegistrationCategoryId;
   location: PropertyLocationInput;
@@ -97,6 +115,8 @@ export interface PropertyRegistrationInput {
   responsibilityLinks?: PropertyRegistrationResponsibilityLinks;
   whatsappContacts?: WhatsAppContactInfo[];
   electricity?: ElectricityInformationInput;
+  numberOfFloors?: number | null;
+  additionalFloorLocations?: AdditionalFloorLocationId[];
   hasVacantUnits: PropertyVacancyAnswer;
   vacancy?: VacancyFoundationInput;
   entrancePhotos?: PropertyEntrancePhotoInput[];
@@ -156,7 +176,18 @@ export const PROPERTY_REGISTRATION_FOUNDATION = {
     allowsBasement: true,
     allowsMezzanine: true,
     allowsRooftop: true,
-    specialFloorLocations: ['basement', 'mezzanine', 'rooftop'] as const
+    specialFloorLocations: ['basement', 'mezzanine', 'rooftop'] as const,
+    additionalFloorLocationsMustBeAsked: true,
+    additionalFloorLocationsNeverForgotten: true,
+    additionalFloorLocationsStoredWithProperty: true,
+    additionalFloorLocationsIncludedInSearch: true,
+    additionalFloorLocationsIncludedInMatchResults: true,
+    additionalFloorLocationsIncludedInUnlockScope: true,
+    additionalFloorLocationsIncludedInVerifiedAccessScope: true,
+    additionalFloorLocationsIncludedInViewingWorkflow: true,
+    additionalFloorLocationsIncludedInVacancyConfirmation: true,
+    additionalFloorLocationsIncludedInPropertyDetails: true,
+    additionalFloorLocationsQuestion: 'Does this property have any of the following additional levels?'
   },
   whatsappContactPolicy: {
     enabled: true,

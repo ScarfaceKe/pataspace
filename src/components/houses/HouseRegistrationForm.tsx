@@ -19,8 +19,8 @@ import {
   type WaterAvailabilityId,
   type WaterRentInclusion
 } from '@/domain/house-registration';
-import type { PropertyOwnershipRole, PropertyRegistrationAction } from '@/domain/property-registration';
-import { getRegistrationResponsibilityCopy, getFloorCountWithGroundFloor } from '@/domain/property-registration';
+import type { PropertyOwnershipRole, PropertyRegistrationAction, AdditionalFloorLocationId } from '@/domain/property-registration';
+import { getRegistrationResponsibilityCopy, getFloorCountWithGroundFloor, ADDITIONAL_FLOOR_LOCATIONS } from '@/domain/property-registration';
 import type { UserRoleId } from '@/domain/types';
 import { summarizeImageUploadResults, uploadPropertyImageFiles } from '@/components/properties/propertyImageUploadClient';
 
@@ -64,6 +64,9 @@ export function HouseRegistrationForm({ profileRole }: HouseRegistrationFormProp
   const [unitNumber, setUnitNumber] = useState('');
   const [numberOfUnits, setNumberOfUnits] = useState('');
   const [numberOfFloors, setNumberOfFloors] = useState('');
+  const [hasBasement, setHasBasement] = useState(false);
+  const [hasMezzanine, setHasMezzanine] = useState(false);
+  const [hasRooftop, setHasRooftop] = useState(false);
   const [vacantUnitFloor, setVacantUnitFloor] = useState('');
   const [monthlyRent, setMonthlyRent] = useState('');
   const [depositStructure, setDepositStructure] = useState<DepositStructureId>('one-month');
@@ -168,6 +171,11 @@ export function HouseRegistrationForm({ profileRole }: HouseRegistrationFormProp
         unitNumber,
         numberOfUnits: toNumberOrNull(numberOfUnits),
         numberOfFloors: toNumberOrNull(numberOfFloors),
+        additionalFloorLocations: [
+          ...(hasBasement ? ['basement'] as const : []),
+          ...(hasMezzanine ? ['mezzanine'] as const : []),
+          ...(hasRooftop ? ['rooftop'] as const : []),
+        ],
         vacantUnitFloor: toNumberOrNull(vacantUnitFloor),
         rent: { monthlyRent: toNumberOrNull(monthlyRent), depositStructure, depositAmount: toNumberOrNull(depositAmount) },
         hasVacantUnits,
@@ -313,10 +321,34 @@ export function HouseRegistrationForm({ profileRole }: HouseRegistrationFormProp
             {numberOfFloors ? <span className="small-note" style={{color: 'var(--text-secondary, #64748b)'}}>{parsedFloorCount}</span> : null}
             {errors.numberOfFloors ? <span>{errors.numberOfFloors}</span> : null}
           </label>
+          <div style={{marginTop: '0.75rem'}}>
+            <span className="field-label" style={{display: 'block', marginBottom: '0.5rem'}}>  Does this property have any of the following additional levels?
+              <span style={{fontSize: '0.8rem', color: 'var(--text-secondary, #64748b)', display: 'block', fontWeight: 400, marginTop: '0.25rem'}}>
+                Select all that apply. These levels will be permanently recorded with your listing.
+              </span>
+            </span>
+            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+              {ADDITIONAL_FLOOR_LOCATIONS.map((loc) => {
+                const isActive = loc.id === 'basement' ? hasBasement : loc.id === 'mezzanine' ? hasMezzanine : hasRooftop;
+                const toggle = loc.id === 'basement' ? setHasBasement : loc.id === 'mezzanine' ? setHasMezzanine : setHasRooftop;
+                return (
+                  <button key={loc.id} type="button" onClick={() => toggle(!isActive)}
+                    style={{padding: '0.5rem 1rem', borderRadius: '9999px', border: isActive ? '2px solid var(--primary, #10b981)' : '2px solid var(--border, #e2e8f0)', background: isActive ? 'var(--primary-light, #ecfdf5)' : 'white', color: isActive ? 'var(--primary, #10b981)' : 'var(--text-secondary, #64748b)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.15s ease'}}>
+                    {isActive ? '✓ ' : ''}{loc.label}
+                  </button>
+                );
+              })}
+            </div>
+            {(hasBasement || hasMezzanine || hasRooftop) ? (
+              <span className="small-note" style={{color: 'var(--primary, #10b981)', marginTop: '0.5rem', display: 'block'}}>
+                These additional levels are now part of your property record and will appear in search results, match details, and listing information.
+              </span>
+            ) : null}
+          </div>
           {hasVacantUnits === 'yes' ? (
             <label className="field-label">Floor where vacant unit exists (if applicable)
               <input type="number" min="0" inputMode="numeric" value={vacantUnitFloor} onChange={(event) => setVacantUnitFloor(event.target.value)} placeholder="Ground floor = 0" />
-              <span className="small-note">You can also enter special locations like basement, mezzanine, or rooftop.</span>
+              <span className="small-note">You can also enter basement, mezzanine, or rooftop if applicable.</span>
               {errors.vacantUnitFloor ? <span>{errors.vacantUnitFloor}</span> : null}
             </label>
           ) : null}

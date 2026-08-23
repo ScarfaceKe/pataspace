@@ -1,4 +1,5 @@
 import { ENTERPRISE_SECURITY_ENHANCEMENT } from '@/domain/security-enhancement';
+import { PROPERTY_DATA_INTEGRITY_RULES, PROPERTY_DATA_INTEGRITY_FOUNDATION } from '@/domain/property-data-integrity';
 import { EVENT_HALL_MATCH_ENGINE_FOUNDATION } from '@/domain/event-hall-match';
 import { EVENT_HALL_MATCH_INTELLIGENCE } from '@/domain/event-hall-match-intelligence';
 import { EVENT_HALL_PREPARED_SYSTEMS } from '@/domain/event-hall-system-preparation';
@@ -120,6 +121,8 @@ export const foundationSnapshot = {
   customerAccessControl: CUSTOMER_ACCESS_CONTROL_STANDARD,
   customerDashboard: CUSTOMER_DASHBOARD_FOUNDATION,
   propertyRegistration: PROPERTY_REGISTRATION_FOUNDATION,
+  propertyDataIntegrity: PROPERTY_DATA_INTEGRITY_RULES,
+  propertyDataIntegrityFoundation: PROPERTY_DATA_INTEGRITY_FOUNDATION,
   propertyRegistrationCategories: PROPERTY_REGISTRATION_CATEGORIES,
   propertyStatuses: PROPERTY_STATUS_OPTIONS,
   houseRegistration: HOUSE_REGISTRATION_FOUNDATION,
