@@ -1,7 +1,7 @@
 import { PremiumLandingShell } from '@/components/PremiumLandingShell';
 import { HeroEntryCards } from '@/components/HeroEntryCards';
 import { PremiumStats } from '@/components/system/PremiumStats';
-import { AmbientParticles } from '@/components/system/AmbientParticles';
+import { KenyaMapAnimation } from '@/components/system/KenyaMapAnimation';
 import { SectionBlobs, ScrollReactiveSection } from '@/components/system/SectionBlobs';
 import { FeaturedPropertiesLive, TestimonialsLive } from '@/components/LandingLiveData';
 import dynamic from 'next/dynamic';
@@ -59,7 +59,7 @@ export default function Home() {
           <div className="hero-glow-orb hero-glow-orb-1" aria-hidden="true" />
           <div className="hero-glow-orb hero-glow-orb-2" aria-hidden="true" />
           <div className="hero-glow-orb hero-glow-orb-3" aria-hidden="true" />
-          <AmbientParticles />
+          <KenyaMapAnimation />
 
           {/* Watermark */}
           <div className="hero-watermark" aria-hidden="true">PATASPACE</div>
