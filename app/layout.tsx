@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { AppLoadingProviders } from '@/components/system/AppLoadingProviders';
 
 export const metadata: Metadata = {
   title: 'PataSpace — Smart Rental Discovery in Kenya',
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en-KE">
       <body>
+        <AppLoadingProviders />
         {children}
       </body>
     </html>

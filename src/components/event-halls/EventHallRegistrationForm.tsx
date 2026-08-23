@@ -4,6 +4,7 @@ import { PropertyLocationVerificationStep } from '@/components/properties/Proper
 import { ListingWhatsAppSupport } from '@/components/support/ListingWhatsAppSupport';
 import type { PropertyLocationVerification } from '@/domain/location-verification';
 import { useMemo, useState } from 'react';
+import { LoadingButton } from '@/components/system/InlineSpinner';
 import {
   EVENT_HALL_REGISTRATION_FOUNDATION,
   HALL_CATEGORIES,
@@ -271,7 +272,7 @@ export function EventHallRegistrationForm({ profileRole }: { profileRole: UserRo
       </section>
     ) : null}
 
-    <div className="auth-actions">{step > 1 ? <button type="button" className="secondary-action" onClick={() => setStep(step - 1)}>Back</button> : null}{step < totalSteps ? <button type="button" className="primary-action" onClick={() => setStep(step + 1)}>Continue</button> : null}<button type="button" className="secondary-action" onClick={() => save('save-draft')} disabled={savingAction !== null}>{savingAction === 'save-draft' ? 'Saving draft...' : 'Save as Draft'}</button><button type="button" className="secondary-action" onClick={() => save('save-draft')} disabled={savingAction !== null}>Continue Later</button>{step === totalSteps ? <button type="button" className="primary-action" onClick={() => save('submit-registration')} disabled={savingAction !== null}>{savingAction === 'submit-registration' ? 'Submitting...' : 'Submit Registration'}</button> : null}</div>
+    <div className="auth-actions">{step > 1 ? <button type="button" className="secondary-action" onClick={() => setStep(step - 1)}>Back</button> : null}{step < totalSteps ? <button type="button" className="primary-action" onClick={() => setStep(step + 1)}>Continue</button> : null}<LoadingButton loading={savingAction === 'save-draft'} loadingText="Saving draft..." className="secondary-action" onClick={() => save('save-draft')}>Save as Draft</LoadingButton><LoadingButton loading={savingAction === 'save-draft'} loadingText="Saving..." className="secondary-action" onClick={() => save('save-draft')}>Continue Later</LoadingButton>{step === totalSteps ? <LoadingButton loading={savingAction === 'submit-registration'} loadingText="Submitting..." className="primary-action" onClick={() => save('submit-registration')}>Submit Registration</LoadingButton> : null}</div>
     {message ? <div className="auth-message" role="status" aria-live="polite">{message}</div> : null}
   </section>;
 }
