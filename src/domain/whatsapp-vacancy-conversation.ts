@@ -119,25 +119,27 @@ export const QUIET_HOURS = {
   timezone: 'Africa/Nairobi',
 };
 
-/** Escalation rules */
+/** Escalation rules — NEW FLOW: Link first, then insist, then AI chat, then owner */
 export const ESCALATION_RULES = {
-  /** Hours after app prompt before asking about specific units */
-  unitDetailAfterHours: 12,
-  /** Days after PM non-response before owner is notified */
-  ownerNotificationAfterDays: 2,
+  /** Step 2: Hours after first link before resending with insistence */
+  resendLinkAfterHours: 12,
+  /** Step 3: Hours after insistence before AI asks specific units via WhatsApp chat */
+  aiChatAfterHours: 24,
+  /** Step 4: Days after PM/owner non-response before owner is notified */
+  ownerNotificationAfterDays: 7,
   /** Days after owner notification before system takes final action */
-  finalActionAfterOwnerDays: 7,
+  finalActionAfterOwnerDays: 14,
   /** Maximum messages per day per person — keeps costs low */
   maxMessagesPerDay: 15,
   /** Weekly dormant outreach frequency */
   dormantOutreachFrequencyDays: 7,
   /** Maximum messages per single conversation */
-  maxMessagesPerConversation: 5,
+  maxMessagesPerConversation: 8,
 };
 
-/** Vacancy confirmation message templates — LEAN: short, precise, cost-efficient */
+/** Vacancy confirmation message templates — NEW FLOW: Link → Insist → AI Chat → Owner */
 export const VACANCY_CONFIRMATION_TEMPLATES = {
-  /** Step 1: Ask if they can verify on the app (1 message, short) — includes quick-verify link */
+  /** Step 1: First message with verification link (9 AM) */
   appFirstPrompt: {
     en: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
       `${propertyName}: ${unitCount} unit${unitCount > 1 ? 's' : ''} need${unitCount === 1 ? 's' : ''} confirmation.
@@ -150,12 +152,39 @@ ${quickVerifyUrl}`,
 Bonyeza kuthibitisha sasa:
 ${quickVerifyUrl}`,
   },
-  /** Step 2: If no app action after 12h, ask about specific units */
-  unitDetailPrompt: {
-    en: (propertyName: string, units: string[]) =>
-      `${propertyName}: Which of ${units.join(', ')} still vacant? Reply the numbers.`,
-    sw: (propertyName: string, units: string[]) =>
-      `${propertyName}: Ni ${units.join(', ')} gani bado tupu? Jibu nambari.`,
+  /** Step 2: Resend same link with insistence (9 PM — 12h later) */
+  insistentReminder: {
+    en: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
+      `${propertyName}: Important — your ${unitCount} unit${unitCount > 1 ? 's' : ''} must be verified to appear in customer searches.
+
+Tap to verify now:
+${quickVerifyUrl}`,
+    sw: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
+      `${propertyName}: Muhimu — vitengo vyako ${unitCount} vinahitaji kuthibitishwa ili kuonekana kwenye utafutaji.
+
+Bonyeza kuthibitisha sasa:
+${quickVerifyUrl}`,
+  },
+  /** Step 3: AI asks specific units via WhatsApp chat (9 AM next day — 24h later) */
+  aiChatPrompt: {
+    en: (propertyName: string, units: string[], category: string) =>
+      `${propertyName}: Your ${category} listing is at risk of being removed.
+
+Tell me which units are still vacant:
+${units.join(', ')}
+
+Reply like: "A1, A3" or "all still vacant" or "all occupied"
+
+I can verify them directly for you right here.`,
+    sw: (propertyName: string, units: string[], category: string) =>
+      `${propertyName}: Orodha yako ya ${category} iko hatarini kuondolewa.
+
+Niambii ni vitengo gani bado tupu:
+${units.join(', ')}
+
+Jibu kama: "A1, A3" au "vyote bado" au "vyote vimetwajwa"
+
+Naweza kuthibitisha moja kwa moja hapa.`,
   },
   /** Short confirmation prompt */
   initialPrompt: {
@@ -176,14 +205,15 @@ ${quickVerifyUrl}`,
     sw: (vacantCount: number, occupiedCount: number) =>
       `Imekamilika! ${vacantCount} tupu, ${occupiedCount} na mwenye. Orodha zimesasishwa.`,
   },
+  /** Step 4: Owner notification after 7 days (not 2 days) */
   ownerEscalation: {
     en: (propertyName: string, days: number, quickVerifyUrl: string) =>
-      `${propertyName}: No vacancy confirmation for ${days} days. Manager hasn't responded.
+      `${propertyName}: No vacancy confirmation for ${days} days. Your listing is no longer visible in customer searches.
 
 Verify your units here:
 ${quickVerifyUrl}`,
     sw: (propertyName: string, days: number, quickVerifyUrl: string) =>
-      `${propertyName}: Hakuna uthibitisho kwa siku ${days}. Meneja hawajajibu.
+      `${propertyName}: Hakuna uthibitisho kwa siku ${days}. Orodha yako haijaonekana kwenye utafutaji.
 
 Kuthibitisha vitengo hapa:
 ${quickVerifyUrl}`,

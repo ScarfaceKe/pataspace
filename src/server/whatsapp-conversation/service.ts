@@ -273,7 +273,8 @@ export async function processIncomingMessage(
 
 /**
  * Check for conversations that need owner escalation.
- * Called daily — after 2 days of PM non-response, owner gets notified.
+ * Called daily — after 7 days of PM non-response, owner gets notified.
+ * The listing is no longer visible in search at this point.
  */
 export async function checkAndEscalateToOwner(): Promise<number> {
   const store = await readConversationStore();
@@ -432,8 +433,10 @@ async function sendWhatsAppMessage(
 }
 
 /**
- * Check for app-prompt conversations that need unit-level detail.
- * After 12 hours with no app action, ask about specific units.
+ * NEW FLOW: Check for conversations that need escalation.
+ * 
+ * Step 2 (12h): Resend same link with insistence
+ * Step 3 (24h): AI asks specific units via WhatsApp chat
  */
 export async function checkAndEscalateToUnitDetail(): Promise<number> {
   const store = await readConversationStore();
@@ -448,25 +451,59 @@ export async function checkAndEscalateToUnitDetail(): Promise<number> {
     ) {
       const createdAt = new Date(conversation.createdAt).getTime();
       const hoursSince = (now - createdAt) / (60 * 60 * 1000);
+      const appUrl = process.env.APP_URL || 'https://pataspace.freebuff.app';
+      const quickVerifyUrl = `${appUrl}/quick-verify?propertyId=${encodeURIComponent(conversation.propertyId)}&name=${encodeURIComponent(conversation.propertyName)}`;
 
-      if (hoursSince >= ESCALATION_RULES.unitDetailAfterHours) {
-        // Send unit detail prompt
-        const template = VACANCY_CONFIRMATION_TEMPLATES.unitDetailPrompt.en(
+      // Step 2: After 12h — Resend link with insistence
+      if (hoursSince >= ESCALATION_RULES.resendLinkAfterHours && hoursSince < ESCALATION_RULES.aiChatAfterHours && conversation.escalationLevel === 0) {
+        const greeting = getSmartGreeting('en');
+        const template = VACANCY_CONFIRMATION_TEMPLATES.insistentReminder.en(
           conversation.propertyName,
-          conversation.unitIdentifiers,
+          conversation.unitIdentifiers.length,
+          quickVerifyUrl,
         );
+        const messageText = `${greeting}\n\n${template}`;
 
-        await sendWhatsAppMessage(conversation, template);
+        await sendWhatsAppMessage(conversation, messageText);
         conversation.messageHistory.push({
           id: randomUUID(),
           direction: 'outbound',
           senderRole: 'system',
-          content: template,
+          content: messageText,
+          language: 'en',
+          timestamp: nowIso(),
+        });
+
+        conversation.escalationLevel = 1;
+        conversation.lastMessageAt = nowIso();
+        escalated++;
+      }
+
+      // Step 3: After 24h — AI asks specific units via WhatsApp chat
+      if (hoursSince >= ESCALATION_RULES.aiChatAfterHours && conversation.escalationLevel <= 1) {
+        const greeting = getSmartGreeting('en');
+        const categoryLabel = conversation.propertyCategory === 'houses' ? 'residential' 
+          : conversation.propertyCategory === 'shops' ? 'commercial' 
+          : 'office';
+        const template = VACANCY_CONFIRMATION_TEMPLATES.aiChatPrompt.en(
+          conversation.propertyName,
+          conversation.unitIdentifiers,
+          categoryLabel,
+        );
+        const messageText = `${greeting}\n\n${template}`;
+
+        await sendWhatsAppMessage(conversation, messageText);
+        conversation.messageHistory.push({
+          id: randomUUID(),
+          direction: 'outbound',
+          senderRole: 'system',
+          content: messageText,
           language: 'en',
           timestamp: nowIso(),
         });
 
         conversation.state = 'awaiting-vacancy-response';
+        conversation.escalationLevel = 2;
         conversation.lastMessageAt = nowIso();
         escalated++;
       }

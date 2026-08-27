@@ -68,6 +68,15 @@ CONTEXT:
 - Available units: ${context.unitIdentifiers.join(', ')}
 - Conversation type: ${context.conversationType}
 
+MIXED-USE BUILDING INTELLIGENCE:
+This property may be a mixed-use building with different unit types:
+- Residential units: apartments, bedsitters, single rooms, maisonettes
+- Commercial units: shops, offices, stalls, kiosks
+- The user may refer to units by type ("the shops are full", "apartments still vacant")
+- Parse unit types and map them to the actual unit identifiers
+- Example: If units are [Shop-A1, Shop-A2, Apt-B1, Apt-B2] and user says "shops full, apartments ok"
+  → occupied: [Shop-A1, Shop-A2], vacant: [Apt-B1, Apt-B2]
+
 RULES:
 1. The user may reply in English, Swahili, or Sheng (mixed).
 2. Understand casual language, abbreviations, and Kenyan expressions.
@@ -77,6 +86,8 @@ RULES:
    - "2 taken", "3 zimeenda", "A1 na A2 zimejaa" → partial (parse which units)
    - "only B2 left", "bado A1 na A3" → only those are vacant
    - "new shop available", "nina duka jipya" → new vacancy to add
+   - "shops full but flats still there" → mixed-use: shops occupied, residential vacant
+   - "ukaaji bado, biashara imetwajwa" → residential vacant, commercial occupied
 4. If the message is unclear, set action to "unclear".
 5. Generate a natural, friendly reply in the SAME language the user used.
 6. Use appropriate Kenyan greetings based on time context.
