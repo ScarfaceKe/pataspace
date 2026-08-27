@@ -67,7 +67,11 @@ export const DAILY_VACANCY_CONFIRMATION_FOUNDATION = {
     unlockPriceReduction: '20% off the standard Unlock This Listing price for this unit.',
     becomesUnverifiedAfterDays: 3,
     ownerNotifiedAfterDays: 2,
-    weeklyDormantOutreachContinues: true
+    weeklyDormantOutreachContinues: true,
+    unverifiedNeverRanksAboveVerified: true,
+    showExactDaysUnverified: true,
+    discountRemovedAfterReconfirmation: true,
+    hiddenAfter7DaysUnconfirmed: true
   },
   futureIntelligenceInPrompt10B: [
     'Search Priority behaviour',

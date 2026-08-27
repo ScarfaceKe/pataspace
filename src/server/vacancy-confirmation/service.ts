@@ -241,3 +241,70 @@ export function calculateUnverifiedVacancyDiscount(standardPrice: number): {
     discountLabel: `${discountPercentage}% off — Vacancy not yet confirmed by property manager`
   };
 }
+
+/**
+ * Get the number of days a listing has been unverified.
+ * Returns 0 if the listing is not in unverified-vacancy status.
+ * Used by match engine to display "Not verified for X days" on the listing card.
+ */
+export function getDaysUnverified(record: VacancyConfirmationRecord): number {
+  if (record.status !== 'unverified-vacancy' || !record.waitingForVerificationAt) return 0;
+  const unverifiedSince = new Date(record.waitingForVerificationAt).getTime();
+  const now = Date.now();
+  const daysSince = Math.floor((now - unverifiedSince) / (24 * 60 * 60 * 1000));
+  return Math.max(1, daysSince);
+}
+
+/**
+ * Get the unverified label for display on property cards.
+ * Returns null if the listing is not unverified.
+ */
+export function getUnverifiedLabel(record: VacancyConfirmationRecord): string | null {
+  if (record.status !== 'unverified-vacancy') return null;
+  const days = getDaysUnverified(record);
+  if (days === 1) return 'Vacancy not confirmed — may or may not be available';
+  return `Vacancy not confirmed for ${days} days — may or may not be available`;
+}
+
+/**
+ * Check if a property has any verified (confirmed-vacancy or grace-period) units.
+ * Used by the match engine to ensure verified listings always rank above unverified.
+ */
+export async function hasVerifiedVacancyForProperty(propertyId: string): Promise<boolean> {
+  const records = await getVacancyConfirmationRecordsForProperty(propertyId);
+  return records.some((r) => r.status === 'confirmed-vacancy' || r.status === 'grace-period');
+}
+
+/**
+ * Get the vacancy ranking tier for a property.
+ * Used by the match engine to sort verified above unverified in search results.
+ * 
+ * Ranking tiers (highest to lowest):
+ * 1. confirmed-vacancy (recently confirmed)
+ * 2. grace-period (within 24h grace)
+ * 3. unverified-vacancy (3+ days unconfirmed, but still visible)
+ * 4. waiting-for-verification (hidden after 7 days)
+ */
+export function getVacancyRankingTier(record: VacancyConfirmationRecord): number {
+  switch (record.status) {
+    case 'confirmed-vacancy': return 1;
+    case 'grace-period': return 2;
+    case 'unverified-vacancy': return 3;
+    case 'waiting-for-verification': return 4;
+    case 'occupied': return 5;
+    default: return 5;
+  }
+}
+
+/**
+ * Compare two vacancy records for ranking purposes.
+ * Returns negative if a should rank higher, positive if b should rank higher.
+ * Verified listings ALWAYS rank above unverified listings.
+ */
+export function compareVacancyRanking(a: VacancyConfirmationRecord, b: VacancyConfirmationRecord): number {
+  const tierA = getVacancyRankingTier(a);
+  const tierB = getVacancyRankingTier(b);
+  if (tierA !== tierB) return tierA - tierB;
+  // Same tier: more recently confirmed ranks higher
+  return new Date(b.lastConfirmedAt).getTime() - new Date(a.lastConfirmedAt).getTime();
+}
