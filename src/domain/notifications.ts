@@ -65,6 +65,10 @@ export type NotificationEventType =
   | 'successful-property-verification'
   | 'verification-issues-requiring-attention'
   | 'daily-vacancy-confirmation-reminder'
+  | 'whatsapp-vacancy-confirmation-sent'
+  | 'whatsapp-vacancy-confirmation-received'
+  | 'whatsapp-owner-escalation'
+  | 'whatsapp-dormant-outreach'
   | 'account-update'
   | 'security-alert'
   | 'high-priority-security-alert'
@@ -206,6 +210,10 @@ export const WHATSAPP_IMPORTANT_NOTIFICATION_EVENTS: readonly NotificationEventT
   // Property Manager.
   'daily-vacancy-verification-reminder',
   'daily-vacancy-confirmation-reminder',
+  'whatsapp-vacancy-confirmation-sent',
+  'whatsapp-vacancy-confirmation-received',
+  'whatsapp-owner-escalation',
+  'whatsapp-dormant-outreach',
   'urgent-viewing-reminder',
   'missed-viewing-alert',
   // Leasing Agent.
