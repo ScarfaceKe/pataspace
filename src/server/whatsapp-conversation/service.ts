@@ -80,7 +80,7 @@ export async function startVacancyConfirmationConversation(input: {
     propertyOwnerUserId: input.propertyOwnerUserId,
     propertyOwnerPhone: input.propertyOwnerPhone,
     conversationType: 'daily-vacancy-confirmation',
-    state: 'awaiting-vacancy-response',
+    state: 'app-prompt-sent',
     messageHistory: [],
     confirmedVacantUnits: [],
     confirmedOccupiedUnits: [],
@@ -296,7 +296,6 @@ export async function checkAndEscalateToOwner(): Promise<number> {
         const template = VACANCY_CONFIRMATION_TEMPLATES.ownerEscalation.en(
           conversation.propertyName,
           daysSince,
-          'your property manager',
         );
         const messageText = `${greeting}\n\n${template}`;
 
@@ -424,4 +423,50 @@ async function sendWhatsAppMessage(
   } catch (error) {
     console.error('Failed to send WhatsApp message:', error);
   }
+}
+
+/**
+ * Check for app-prompt conversations that need unit-level detail.
+ * After 12 hours with no app action, ask about specific units.
+ */
+export async function checkAndEscalateToUnitDetail(): Promise<number> {
+  const store = await readConversationStore();
+  const now = Date.now();
+  let escalated = 0;
+
+  for (const conversation of store.conversations) {
+    if (
+      conversation.state === 'app-prompt-sent' &&
+      conversation.currentRecipientPhone &&
+      !isQuietHours()
+    ) {
+      const createdAt = new Date(conversation.createdAt).getTime();
+      const hoursSince = (now - createdAt) / (60 * 60 * 1000);
+
+      if (hoursSince >= ESCALATION_RULES.unitDetailAfterHours) {
+        // Send unit detail prompt
+        const template = VACANCY_CONFIRMATION_TEMPLATES.unitDetailPrompt.en(
+          conversation.propertyName,
+          conversation.unitIdentifiers,
+        );
+
+        await sendWhatsAppMessage(conversation, template);
+        conversation.messageHistory.push({
+          id: randomUUID(),
+          direction: 'outbound',
+          senderRole: 'system',
+          content: template,
+          language: 'en',
+          timestamp: nowIso(),
+        });
+
+        conversation.state = 'awaiting-vacancy-response';
+        conversation.lastMessageAt = nowIso();
+        escalated++;
+      }
+    }
+  }
+
+  if (escalated > 0) await writeConversationStore(store);
+  return escalated;
 }

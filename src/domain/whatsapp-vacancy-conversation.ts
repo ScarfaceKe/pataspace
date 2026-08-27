@@ -10,6 +10,8 @@
 
 export type ConversationState =
   | 'idle'
+  | 'app-prompt-sent'
+  | 'app-prompt-responded'
   | 'awaiting-vacancy-response'
   | 'awaiting-partial-specification'
   | 'awaiting-owner-action'
@@ -119,47 +121,66 @@ export const QUIET_HOURS = {
 
 /** Escalation rules */
 export const ESCALATION_RULES = {
+  /** Hours after app prompt before asking about specific units */
+  unitDetailAfterHours: 12,
   /** Days after PM non-response before owner is notified */
   ownerNotificationAfterDays: 2,
   /** Days after owner notification before system takes final action */
   finalActionAfterOwnerDays: 7,
-  /** Maximum messages per day per person */
-  maxMessagesPerDay: 2,
+  /** Maximum messages per day per person — keeps costs low */
+  maxMessagesPerDay: 15,
   /** Weekly dormant outreach frequency */
   dormantOutreachFrequencyDays: 7,
+  /** Maximum messages per single conversation */
+  maxMessagesPerConversation: 5,
 };
 
-/** Vacancy confirmation message templates */
+/** Vacancy confirmation message templates — LEAN: short, precise, cost-efficient */
 export const VACANCY_CONFIRMATION_TEMPLATES = {
+  /** Step 1: Ask if they can verify on the app (1 message, short) */
+  appFirstPrompt: {
+    en: (propertyName: string, unitCount: number) =>
+      `${propertyName}: ${unitCount} unit${unitCount > 1 ? 's' : ''} need${unitCount === 1 ? 's' : ''} confirmation. Verify on PataSpace today?`,
+    sw: (propertyName: string, unitCount: number) =>
+      `${propertyName}: Vitengo ${unitCount} vinahitaji uthibitisho. Kuthibitisha kwenye PataSpace leo?`,
+  },
+  /** Step 2: If no app action after 12h, ask about specific units */
+  unitDetailPrompt: {
+    en: (propertyName: string, units: string[]) =>
+      `${propertyName}: Which of ${units.join(', ')} still vacant? Reply the numbers.`,
+    sw: (propertyName: string, units: string[]) =>
+      `${propertyName}: Ni ${units.join(', ')} gani bado tupu? Jibu nambari.`,
+  },
+  /** Short confirmation prompt */
   initialPrompt: {
     en: (propertyName: string, units: string[]) =>
-      `Hi! Your property "${propertyName}" has ${units.length} vacant unit${units.length > 1 ? 's' : ''} on PataSpace: ${units.join(', ')}.\n\nAre they still available?\n\nReply:\n• "Yes" or "All available" — all still vacant\n• "Some taken" — tell me which ones\n• "All occupied" — none available anymore`,
+      `${propertyName}: ${units.join(', ')} — still vacant? Reply Y, N, or PARTIAL.`,
     sw: (propertyName: string, units: string[]) =>
-      `Habari! Nyumba yako "${propertyName}" ina vitengo ${units.length} tupu kwenye PataSpace: ${units.join(', ')}.\n\nBado vinapatikana?\n\nJibu:\n• "Ndiyo" au "vyote bado" — vyote bado tupu\n• "Baadhi vimetwajwa" — ni gani bado\n• "Vyote vimejaa" — hakuna tena`,
+      `${propertyName}: ${units.join(', ')} — bado? Jibu NDIYO, HAPANA, au BAADHI.`,
   },
   partialClarification: {
     en: (remaining: string[]) =>
-      `Which units are still vacant? Reply with the unit numbers, for example: "${remaining.slice(0, 2).join(', ')}"`,
+      `Which ones? Reply numbers: ${remaining.join(', ')}`,
     sw: (remaining: string[]) =>
-      `Ni vitengo gani bado tupu? Jibu kwa nambari zauniti, mfano: "${remaining.slice(0, 2).join(', ')}"`,
+      `Ni gani? Jibu nambari: ${remaining.join(', ')}`,
   },
   confirmationSuccess: {
     en: (vacantCount: number, occupiedCount: number) =>
-      `Updated! ${vacantCount} unit${vacantCount !== 1 ? 's' : ''} confirmed as vacant.${occupiedCount > 0 ? ` ${occupiedCount} marked as occupied.` : ''} Your listings stay active.`,
+      `Done! ${vacantCount} vacant, ${occupiedCount} occupied. Listings updated.`,
     sw: (vacantCount: number, occupiedCount: number) =>
-      `Imesasishwa! Uniti ${vacantCount} imethibitishwa kuwa tupu.${occupiedCount > 0 ? ` ${occupiedCount} imetajwa kuwa na mwenye.` : ''} Orodha zako zinaendelea.`,
+      `Imekamilika! ${vacantCount} tupu, ${occupiedCount} na mwenye. Orodha zimesasishwa.`,
   },
   ownerEscalation: {
-    en: (propertyName: string, days: number, managerName: string) =>
-      `Hi! Your property "${propertyName}" has not had its vacancy confirmed for ${days} days. Your property manager ${managerName} has not responded.\n\nAs the owner, you can:\n• Confirm units are still vacant\n• Mark some as occupied\n• Let us know if the property manager has changed`,
-    sw: (propertyName: string, days: number, managerName: string) =>
-      `Habari! Nyumba yako "${propertyName}" haijathibitishwa kwa siku ${days}. Meneja wako ${managerName} hawajajibu.\n\nKama mmiliki, unaweza:\n• Kuthibitisha kuwa bado tupu\n• Kuashiria baadhi yamejaa\n• Kutufahamisha kama meneja amebadilika`,
+    en: (propertyName: string, days: number) =>
+      `${propertyName}: No vacancy confirmation for ${days} days. Manager hasn't responded. Please verify your units on PataSpace.`,
+    sw: (propertyName: string, days: number) =>
+      `${propertyName}: Hakuna uthibitisho kwa siku ${days}. Meneja hawajajibu. Tafadhali kuthibitisha kwenye PataSpace.`,
   },
   dormantOutreach: {
     en: (managerName: string) =>
-      `Hi ${managerName}! Do you have any new vacant houses, shops, or offices to list on PataSpace? We'd love to help you find tenants. Reply "Yes" to get started.`,
+      `${managerName}: Any new vacant spaces to list on PataSpace? Reply YES to start.`,
     sw: (managerName: string) =>
-      `Habari ${managerName}! Una nyumba, maduka, au ofisi mpya tupu za kuorodhesha kwenye PataSpace? Tungependa kukusaidia kupata wapangaji. Jibu "Ndiyo" kuanza.`,
+      `${managerName}: Una nafasi mpya tupu za kuorodhesha? Jibu NDIYO kuanza.`,
   },
 };
 

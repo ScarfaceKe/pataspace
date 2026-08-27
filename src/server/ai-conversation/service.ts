@@ -151,18 +151,20 @@ function parseWithRules(
     /^zote\s*bado$/,
   ];
 
-  // All occupied indicators
+  // All occupied indicators (including short N)
   const allOccupiedPatterns = [
-    /^no$/, /^nah$/, /^nope$/,
-    /^hapana$/, /^la$/,
-    /^all\s*(occupied|taken|rented|gone)$/,
-    /^vyote\s*(vimejaa|vimetwajwa|vimeisha)$/,
-    /^none\s*(left|available|vacant)$/,
-    /^hakuna\s*(tena|aliye)/,
+    /^n$/i, /^no$/i, /^nah$/i, /^nope$/i,
+    /^hapana$/i, /^la$/i,
+    /^all\s*(occupied|taken|rented|gone)$/i,
+    /^vyote\s*(vimejaa|vimetwajwa|vimeisha)$/i,
+    /^none\s*(left|available|vacant)$/i,
+    /^hakuna\s*(tena|aliye)/i,
   ];
 
-  // Partial indicators
+  // Partial indicators (including PARTIAL keyword)
   const partialPatterns = [
+    /^partial$/i,
+    /^baadhi$/i,
     /some\s*(taken|occupied|rented|gone|available|vacant)/i,
     /baadhi\s*(vimetwajwa|vimejaa|vinapatikana)/i,
     /(\d+)\s*(taken|occupied|rented|gone)/i,
