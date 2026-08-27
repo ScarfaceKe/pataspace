@@ -4400,3 +4400,56 @@ html, body {
     display: none !important;
   }
 }
+
+/* =========== IMMEDIATE SVG LOADER: Kenya map city dot pulsing =========== */
+.ps-city-pulse {
+  animation: ps-dot-breathe 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.ps-city-pulse .ps-ring {
+  animation: ps-ring-expand 3s ease-out infinite;
+  transform-origin: center;
+}
+
+.ps-city-pulse .ps-glow {
+  animation: ps-glow-pulse 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes ps-dot-breathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes ps-ring-expand {
+  0% { r: 5; opacity: 0.4; }
+  100% { r: 20; opacity: 0; }
+}
+
+@keyframes ps-glow-pulse {
+  0%, 100% { r: 5; opacity: 0.1; }
+  50% { r: 9; opacity: 0.25; }
+}
+
+/* Prevent body scroll while loader is visible */
+body:has(#ps-immediate-loader:not([style*="opacity: 0"])) {
+  overflow: hidden;
+}
+
+/* Ensure loader is above everything */
+#ps-immediate-loader {
+  will-change: opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-city-pulse,
+  .ps-city-pulse .ps-ring,
+  .ps-city-pulse .ps-glow {
+    animation: none !important;
+    opacity: 0.7 !important;
+  }
+  #ps-immediate-loader {
+    transition: none !important;
+  }
+}
