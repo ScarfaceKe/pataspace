@@ -1,56 +1,31 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCanvasPerformance } from './useCanvasPerformance';
 
 /**
- * Real Kenya boundary from Natural Earth / world.geo.json (simplified).
- * Each point is [longitude, latitude].
- * Projected to canvas via Mercator projection for accurate shape.
+ * Kenya boundary from Natural Earth 10m admin-0 countries (Kenya only, 43 vertices).
+ * Equirectangular projection: longitude → x, latitude → y (inverted).
+ * Geographically accurate — no Mercator distortion near equator.
  */
 const KENYA_BOUNDARY: [number, number][] = [
-  [40.993, -0.85829],
-  [41.58513, -1.68325],
-  [40.88477, -2.08255],
-  [40.63785, -2.49979],
-  [40.26304, -2.57309],
-  [40.12119, -3.27768],
-  [39.80006, -3.68116],
-  [39.60489, -4.34653],
-  [39.20222, -4.67677],
-  [37.7669, -3.67712],
-  [37.69869, -3.09699],
-  [34.07262, -1.05982],
-  [33.903711, -0.95],
-  [33.893569, 0.109814],
-  [34.18, 0.515],
-  [34.6721, 1.17694],
-  [35.03599, 1.90584],
-  [34.59607, 3.05374],
-  [34.47913, 3.5556],
-  [34.005, 4.249885],
-  [34.620196, 4.847123],
-  [35.298007, 5.506],
-  [35.817448, 5.338232],
-  [35.817448, 4.776966],
-  [36.159079, 4.447864],
-  [36.855093, 4.447864],
-  [38.120915, 3.598605],
-  [38.43697, 3.58851],
-  [38.67114, 3.61607],
-  [38.89251, 3.50074],
-  [39.559384, 3.42206],
-  [39.85494, 3.83879],
-  [40.76848, 4.25702],
-  [41.1718, 3.91909],
-  [41.855083, 3.918912],
-  [40.98105, 2.78452],
-  [40.993, -0.85829],
+  [35.705846, 4.619447], [36.225726, 4.449600], [37.082522, 4.322166],
+  [38.048974, 3.641846], [38.574110, 3.604561], [39.067930, 3.526582],
+  [39.600818, 3.528907], [40.365732, 4.094867], [41.215293, 3.936608],
+  [41.446183, 3.349047], [40.968486, 1.497145], [40.976961, -0.653861],
+  [41.535085, -1.696303], [41.096853, -1.985284], [40.908214, -1.997735],
+  [40.906016, -2.153253], [40.883149, -2.224054], [40.758149, -2.447442],
+  [40.188650, -2.813572], [40.129080, -3.251886], [39.963390, -3.393243],
+  [39.808116, -3.608819], [39.712087, -3.965020], [39.604666, -3.988214],
+  [39.551117, -4.402114], [39.397716, -4.570082], [39.020388, -4.554915],
+  [37.722276, -3.539990], [37.668429, -3.338245], [35.246367, -1.706823],
+  [33.952480, -0.115702], [34.219751, 0.638567], [34.560065, 1.093149],
+  [34.913558, 1.561560], [34.904284, 2.254255], [34.740959, 2.835539],
+  [34.574664, 2.946126], [34.386872, 3.485628], [34.240938, 3.783620],
+  [34.086219, 3.894673], [34.006017, 4.205713], [35.433715, 5.003836],
+  [35.705846, 4.619447],
 ];
 
-/**
- * Major Kenyan cities with REAL latitude/longitude coordinates.
- */
 const KENYA_CITIES: { name: string; lng: number; lat: number }[] = [
   { name: 'Nairobi',   lng: 36.8219, lat: -1.2921 },
   { name: 'Mombasa',   lng: 39.6682, lat: -4.0435 },
@@ -69,40 +44,27 @@ const KENYA_CITIES: { name: string; lng: number; lat: number }[] = [
   { name: 'Lamu',      lng: 40.9024, lat: -2.2717 },
 ];
 
-// Kenya bounding box
-const KENYA_MIN_LNG = 33.893569;
-const KENYA_MAX_LNG = 41.855083;
-const KENYA_MIN_LAT = -4.67677;
-const KENYA_MAX_LAT = 5.506;
+// Equirectangular bounds
+const LNG_MIN = 33.952480;
+const LNG_MAX = 41.535085;
+const LAT_MIN = -4.570082;
+const LAT_MAX = 5.003836;
+const LNG_RANGE = LNG_MAX - LNG_MIN;
+const LAT_RANGE = LAT_MAX - LAT_MIN;
 
-/** Mercator Y projection */
-function mercatorY(lat: number): number {
-  const rad = (lat * Math.PI) / 180;
-  return Math.log(Math.tan(Math.PI / 4 + rad / 2));
-}
-
-const MERC_Y_MIN = mercatorY(KENYA_MIN_LAT); // ~-0.0816
-const MERC_Y_MAX = mercatorY(KENYA_MAX_LAT); // ~0.0997
-const MERC_Y_RANGE = MERC_Y_MAX - MERC_Y_MIN;
-
-/**
- * Convert real [lng, lat] → canvas [x, y] coordinates in 0-1 normalized space.
- * Uses Mercator projection for y-axis to preserve shape.
- */
+/** Equirectangular projection: lon → x, lat → y (flipped for canvas) */
 function geoToCanvas(lng: number, lat: number): [number, number] {
-  const x = (lng - KENYA_MIN_LNG) / (KENYA_MAX_LNG - KENYA_MIN_LNG);
-  const mercY = mercatorY(lat);
-  // Canvas y is inverted (0=top=north), so flip
-  const y = 1 - (mercY - MERC_Y_MIN) / MERC_Y_RANGE;
-  return [x, y];
+  return [
+    (lng - LNG_MIN) / LNG_RANGE,
+    (LAT_MAX - lat) / LAT_RANGE,
+  ];
 }
 
-// Pre-compute canvas coordinates
 const KENYA_OUTLINE: [number, number][] = KENYA_BOUNDARY.map(([lng, lat]) => geoToCanvas(lng, lat));
-const KENYA_CITY_DOTS: { name: string; x: number; y: number }[] = KENYA_CITIES.map((c) => ({
-  name: c.name,
-  ...(() => { const [x, y] = geoToCanvas(c.lng, c.lat); return { x, y }; })(),
-}));
+const CITY_DOTS: { name: string; x: number; y: number }[] = KENYA_CITIES.map((c) => {
+  const [x, y] = geoToCanvas(c.lng, c.lat);
+  return { name: c.name, x, y };
+});
 
 /** Draw the Kenya outline path on canvas */
 function drawKenyaPath(
@@ -110,14 +72,14 @@ function drawKenyaPath(
   points: [number, number][],
   w: number,
   h: number,
-  padding: number,
+  pad: number,
 ) {
-  const mapW = w - padding * 2;
-  const mapH = h - padding * 2;
+  const mapW = w - pad * 2;
+  const mapH = h - pad * 2;
   ctx.beginPath();
   for (let i = 0; i < points.length; i++) {
-    const px = padding + points[i][0] * mapW;
-    const py = padding + points[i][1] * mapH;
+    const px = pad + points[i][0] * mapW;
+    const py = pad + points[i][1] * mapH;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
@@ -134,7 +96,6 @@ function drawCityDot(
   ringAlpha: number,
   ringRadius: number,
 ) {
-  // Expanding ring (breathing pulse)
   if (ringAlpha > 0.01) {
     ctx.strokeStyle = `rgba(16, 185, 129, ${ringAlpha * 0.6})`;
     ctx.lineWidth = 1.5;
@@ -143,7 +104,6 @@ function drawCityDot(
     ctx.stroke();
   }
 
-  // Outer glow
   const glowRadius = baseRadius * 5;
   const glow = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
   glow.addColorStop(0, `rgba(16, 185, 129, ${alpha * 0.35})`);
@@ -154,13 +114,11 @@ function drawCityDot(
   ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Inner solid dot
   ctx.fillStyle = `rgba(16, 185, 129, ${Math.min(alpha + 0.3, 1)})`;
   ctx.beginPath();
   ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Bright core
   ctx.fillStyle = `rgba(200, 255, 230, ${alpha * 0.8})`;
   ctx.beginPath();
   ctx.arc(x, y, baseRadius * 0.4, 0, Math.PI * 2);
@@ -178,11 +136,30 @@ interface DotState {
 export function KenyaMapAnimation() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const perf = useCanvasPerformance();
+  const scrollRef = useRef(0);
+  const [scrollY, setScrollY] = useState(0);
   const stateRef = useRef<{
     dots: DotState[];
     animFrame: number;
     lastTime: number;
   } | null>(null);
+
+  // Track scroll for parallax
+  useEffect(() => {
+    let ticking = false;
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          scrollRef.current = window.scrollY;
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -190,34 +167,36 @@ export function KenyaMapAnimation() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Initialize dot states with staggered phases for organic feel
-    const dots: DotState[] = KENYA_CITY_DOTS.map((_, i) => ({
-      phase: (i / KENYA_CITY_DOTS.length) * Math.PI * 2,
-      speed: 0.012 + Math.random() * 0.008, // 4-6s breathing cycle
+    const dots: DotState[] = CITY_DOTS.map((_, i) => ({
+      phase: (i / CITY_DOTS.length) * Math.PI * 2,
+      speed: 0.012 + Math.random() * 0.008,
       baseRadius: 3 + Math.random() * 1.5,
-      ringPhase: (i / KENYA_CITY_DOTS.length) * Math.PI * 2,
-      ringSpeed: 0.008 + Math.random() * 0.006, // slower ring expansion
+      ringPhase: (i / CITY_DOTS.length) * Math.PI * 2,
+      ringSpeed: 0.008 + Math.random() * 0.006,
     }));
 
     stateRef.current = { dots, animFrame: 0, lastTime: 0 };
     let running = true;
 
-    // If user prefers reduced motion, draw once statically and stop
+    // Reduced motion: draw once statically
     if (perf.reducedMotion) {
       const rect = canvas.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
-      const padding = Math.min(w, h) * 0.06;
+      const pad = Math.min(w, h) * 0.08;
+      canvas.width = w * perf.dpr;
+      canvas.height = h * perf.dpr;
+      ctx.setTransform(perf.dpr, 0, 0, perf.dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, padding);
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
       ctx.lineWidth = 1.8;
       ctx.stroke();
-      const mapW = w - padding * 2;
-      const mapH = h - padding * 2;
-      for (const city of KENYA_CITY_DOTS) {
-        const x = padding + city.x * mapW;
-        const y = padding + city.y * mapH;
+      const mapW = w - pad * 2;
+      const mapH = h - pad * 2;
+      for (const city of CITY_DOTS) {
+        const x = pad + city.x * mapW;
+        const y = pad + city.y * mapH;
         drawCityDot(ctx, x, y, 3.5, 0.7, 0.3, 12);
       }
       return;
@@ -240,7 +219,6 @@ export function KenyaMapAnimation() {
       const w = rect.width;
       const h = rect.height;
 
-      // Throttle to ~30fps (20fps on low-end devices)
       const frameInterval = perf.isLowEnd ? 50 : 33;
       if (time - state.lastTime < frameInterval) {
         state.animFrame = requestAnimationFrame(render);
@@ -250,73 +228,97 @@ export function KenyaMapAnimation() {
 
       ctx.clearRect(0, 0, w, h);
 
-      const padding = Math.min(w, h) * 0.06;
-      const mapW = w - padding * 2;
-      const mapH = h - padding * 2;
+      const pad = Math.min(w, h) * 0.08;
+      const mapW = w - pad * 2;
+      const mapH = h - pad * 2;
 
-      // --- Draw Kenya outline ---
+      // --- SCROLL PARALLAX ---
+      // Map shifts gently as user scrolls (max 60px shift)
+      const scrollOffset = Math.min(scrollRef.current * 0.08, 60);
 
-      // Glow layer (thick, faint)
-      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, padding);
+      // --- 3D DEPTH: Multiple outline layers ---
+      // Layer 1: Deepest shadow (dark, offset)
+      ctx.save();
+      ctx.translate(2, 3);
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = 'rgba(0, 40, 30, 0.08)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 2: Outer glow (wide, faint green)
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.04)';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 10;
       ctx.stroke();
 
-      // Main outline
-      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, padding);
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+      // Layer 3: Mid glow
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Layer 4: Main outline
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.22)';
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // Inner glow outline
-      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, padding);
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
-      ctx.lineWidth = 3;
+      // Layer 5: Bright inner edge
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = 'rgba(110, 231, 183, 0.06)';
+      ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Subtle fill inside the country
-      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, padding);
-      const fillGrad = ctx.createLinearGradient(padding, padding, padding + mapW, padding + mapH);
-      fillGrad.addColorStop(0, 'rgba(16, 185, 129, 0.02)');
-      fillGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.04)');
+      // Subtle gradient fill inside Kenya
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      const fillGrad = ctx.createLinearGradient(pad, pad, pad + mapW, pad + mapH);
+      fillGrad.addColorStop(0, 'rgba(16, 185, 129, 0.015)');
+      fillGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.035)');
       fillGrad.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
       ctx.fillStyle = fillGrad;
       ctx.fill();
 
-      // --- Draw pulsing city dots ---
+      // --- PULSING OUTLINE (alive feel) ---
+      const pulseAlpha = 0.08 + 0.06 * Math.sin(time * 0.001);
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = `rgba(16, 185, 129, ${pulseAlpha})`;
+      ctx.lineWidth = 2 + Math.sin(time * 0.0008) * 0.5;
+      ctx.stroke();
+
+      // --- CITY DOTS with parallax offset ---
       const isMobile = w < 600;
-      const maxDots = isMobile ? 8 : perf.isLowEnd ? 10 : KENYA_CITY_DOTS.length;
+      const maxDots = isMobile ? 8 : perf.isLowEnd ? 10 : CITY_DOTS.length;
 
       for (let i = 0; i < maxDots; i++) {
-        const city = KENYA_CITY_DOTS[i];
+        const city = CITY_DOTS[i];
         const dot = state.dots[i];
 
-        // Update phases
         dot.phase += dot.speed;
         if (dot.phase > Math.PI * 2) dot.phase -= Math.PI * 2;
         dot.ringPhase += dot.ringSpeed;
         if (dot.ringPhase > Math.PI * 2) dot.ringPhase -= Math.PI * 2;
 
-        // Sine wave for breathing alpha: oscillates 0.35 → 1.0 → 0.35
         const alpha = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(dot.phase));
-
-        // Ring expands and fades
-        const ringProgress = (0.5 + 0.5 * Math.sin(dot.ringPhase)); // 0 → 1
+        const ringProgress = 0.5 + 0.5 * Math.sin(dot.ringPhase);
         const ringRadius = dot.baseRadius * 2 + ringProgress * dot.baseRadius * 4;
         const ringAlpha = ringProgress * 0.5;
 
-        const x = padding + city.x * mapW;
-        const y = padding + city.y * mapH;
+        // Parallax: dots shift with scroll (less than the map itself)
+        const parallaxY = scrollOffset * (0.3 + city.y * 0.4);
+
+        const x = pad + city.x * mapW;
+        const y = pad + city.y * mapH - parallaxY;
 
         drawCityDot(ctx, x, y, dot.baseRadius, alpha, ringAlpha, ringRadius);
       }
 
-      // --- Draw connecting lines between nearby cities (desktop only) ---
+      // --- Connecting lines between nearby cities (desktop) ---
       if (!isMobile) {
         for (let i = 0; i < maxDots; i++) {
           for (let j = i + 1; j < maxDots; j++) {
-            const c1 = KENYA_CITY_DOTS[i];
-            const c2 = KENYA_CITY_DOTS[j];
+            const c1 = CITY_DOTS[i];
+            const c2 = CITY_DOTS[j];
             const dx = c1.x - c2.x;
             const dy = c1.y - c2.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -325,8 +327,8 @@ export function KenyaMapAnimation() {
               ctx.strokeStyle = `rgba(16, 185, 129, ${lineAlpha})`;
               ctx.lineWidth = 0.5;
               ctx.beginPath();
-              ctx.moveTo(padding + c1.x * mapW, padding + c1.y * mapH);
-              ctx.lineTo(padding + c2.x * mapW, padding + c2.y * mapH);
+              ctx.moveTo(pad + c1.x * mapW, pad + c1.y * mapH);
+              ctx.lineTo(pad + c2.x * mapW, pad + c2.y * mapH);
               ctx.stroke();
             }
           }
@@ -345,6 +347,10 @@ export function KenyaMapAnimation() {
     };
   }, []);
 
+  // 3D perspective tilt based on scroll
+  const tiltX = Math.min(scrollY * 0.015, 6);
+  const tiltScale = 1 + Math.min(scrollY * 0.0001, 0.04);
+
   return (
     <canvas
       ref={canvasRef}
@@ -355,7 +361,11 @@ export function KenyaMapAnimation() {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        opacity: 0.75,
+        opacity: 0.8,
+        transform: `perspective(1200px) rotateX(${tiltX}deg) scale(${tiltScale})`,
+        transformOrigin: 'center 40%',
+        transition: 'transform 0.1s linear',
+        willChange: 'transform',
       }}
     />
   );

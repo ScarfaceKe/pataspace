@@ -4,26 +4,31 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useCanvasPerformance } from './useCanvasPerformance';
 
 /**
- * KenyaMapLoadingScreen — Full-screen Kenya map that replaces the immediate SVG loader.
- * Features:
- *   - Real Kenya outline from GeoJSON
- *   - 15 city dots with breathing pulse animation
- *   - Traveling highlight that cycles: Nairobi → Nakuru → Eldoret → Kisumu → Mombasa → Nairobi
- *   - Smooth fade transition when app is ready
- *   - 30fps throttled, reduced-motion safe
+ * KenyaMapLoadingScreen — Full-screen Kenya map loading experience.
+ * - Real geographic Kenya from Natural Earth 10m data
+ * - Equirectangular projection (no distortion near equator)
+ * - 15 city dots with breathing pulse
+ * - Traveling highlight: Nairobi → Nakuru → Eldoret → Kisumu → Mombasa
+ * - 3D depth via layered outlines with shadows
+ * - Covers ~75% of screen
  */
 
 const KENYA_BOUNDARY: [number, number][] = [
-  [40.993, -0.85829], [41.58513, -1.68325], [40.88477, -2.08255], [40.63785, -2.49979],
-  [40.26304, -2.57309], [40.12119, -3.27768], [39.80006, -3.68116], [39.60489, -4.34653],
-  [39.20222, -4.67677], [37.7669, -3.67712], [37.69869, -3.09699], [34.07262, -1.05982],
-  [33.903711, -0.95], [33.893569, 0.109814], [34.18, 0.515], [34.6721, 1.17694],
-  [35.03599, 1.90584], [34.59607, 3.05374], [34.47913, 3.5556], [34.005, 4.249885],
-  [34.620196, 4.847123], [35.298007, 5.506], [35.817448, 5.338232], [35.817448, 4.776966],
-  [36.159079, 4.447864], [36.855093, 4.447864], [38.120915, 3.598605], [38.43697, 3.58851],
-  [38.67114, 3.61607], [38.89251, 3.50074], [39.559384, 3.42206], [39.85494, 3.83879],
-  [40.76848, 4.25702], [41.1718, 3.91909], [41.855083, 3.918912], [40.98105, 2.78452],
-  [40.993, -0.85829],
+  [35.705846, 4.619447], [36.225726, 4.449600], [37.082522, 4.322166],
+  [38.048974, 3.641846], [38.574110, 3.604561], [39.067930, 3.526582],
+  [39.600818, 3.528907], [40.365732, 4.094867], [41.215293, 3.936608],
+  [41.446183, 3.349047], [40.968486, 1.497145], [40.976961, -0.653861],
+  [41.535085, -1.696303], [41.096853, -1.985284], [40.908214, -1.997735],
+  [40.906016, -2.153253], [40.883149, -2.224054], [40.758149, -2.447442],
+  [40.188650, -2.813572], [40.129080, -3.251886], [39.963390, -3.393243],
+  [39.808116, -3.608819], [39.712087, -3.965020], [39.604666, -3.988214],
+  [39.551117, -4.402114], [39.397716, -4.570082], [39.020388, -4.554915],
+  [37.722276, -3.539990], [37.668429, -3.338245], [35.246367, -1.706823],
+  [33.952480, -0.115702], [34.219751, 0.638567], [34.560065, 1.093149],
+  [34.913558, 1.561560], [34.904284, 2.254255], [34.740959, 2.835539],
+  [34.574664, 2.946126], [34.386872, 3.485628], [34.240938, 3.783620],
+  [34.086219, 3.894673], [34.006017, 4.205713], [35.433715, 5.003836],
+  [35.705846, 4.619447],
 ];
 
 const KENYA_CITIES: { name: string; lng: number; lat: number }[] = [
@@ -44,25 +49,18 @@ const KENYA_CITIES: { name: string; lng: number; lat: number }[] = [
   { name: 'Lamu', lng: 40.9024, lat: -2.2717 },
 ];
 
-const KENYA_MIN_LNG = 33.893569;
-const KENYA_MAX_LNG = 41.855083;
-const KENYA_MIN_LAT = -4.67677;
-const KENYA_MAX_LAT = 5.506;
-
-function mercatorY(lat: number): number {
-  const rad = (lat * Math.PI) / 180;
-  return Math.log(Math.tan(Math.PI / 4 + rad / 2));
-}
-
-const MERC_Y_MIN = mercatorY(KENYA_MIN_LAT);
-const MERC_Y_MAX = mercatorY(KENYA_MAX_LAT);
-const MERC_Y_RANGE = MERC_Y_MAX - MERC_Y_MIN;
+const LNG_MIN = 33.952480;
+const LNG_MAX = 41.535085;
+const LAT_MIN = -4.570082;
+const LAT_MAX = 5.003836;
+const LNG_RANGE = LNG_MAX - LNG_MIN;
+const LAT_RANGE = LAT_MAX - LAT_MIN;
 
 function geoToCanvas(lng: number, lat: number): [number, number] {
-  const x = (lng - KENYA_MIN_LNG) / (KENYA_MAX_LNG - KENYA_MIN_LNG);
-  const mercY = mercatorY(lat);
-  const y = 1 - (mercY - MERC_Y_MIN) / MERC_Y_RANGE;
-  return [x, y];
+  return [
+    (lng - LNG_MIN) / LNG_RANGE,
+    (LAT_MAX - lat) / LAT_RANGE,
+  ];
 }
 
 const KENYA_OUTLINE: [number, number][] = KENYA_BOUNDARY.map(([lng, lat]) => geoToCanvas(lng, lat));
@@ -71,7 +69,6 @@ const CITY_DOTS: { name: string; x: number; y: number }[] = KENYA_CITIES.map((c)
   return { name: c.name, x, y };
 });
 
-/** Cities that form the traveling highlight route */
 const TRAVEL_ROUTE = ['Nairobi', 'Nakuru', 'Eldoret', 'Kisumu', 'Mombasa'];
 
 function getCityIndex(name: string): number {
@@ -97,15 +94,12 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
   const stateRef = useRef<{
     animFrame: number;
     lastTime: number;
-    travelPhase: number; // 0 → total travel route length
-    travelProgress: number; // smooth interpolation 0-1 between cities
+    travelProgress: number;
     routeIndex: number;
   } | null>(null);
 
   const cleanup = useCallback(() => {
-    if (stateRef.current) {
-      cancelAnimationFrame(stateRef.current.animFrame);
-    }
+    if (stateRef.current) cancelAnimationFrame(stateRef.current.animFrame);
   }, []);
 
   useEffect(() => {
@@ -116,7 +110,6 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
 
     let running = true;
 
-    // If user prefers reduced motion, draw once statically
     if (perf.reducedMotion) {
       const rect = canvas.getBoundingClientRect();
       const w = rect.width;
@@ -143,13 +136,7 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
       return;
     }
 
-    stateRef.current = {
-      animFrame: 0,
-      lastTime: 0,
-      travelPhase: 0,
-      travelProgress: 0,
-      routeIndex: 0,
-    };
+    stateRef.current = { animFrame: 0, lastTime: 0, travelProgress: 0, routeIndex: 0 };
 
     function resize() {
       const rect = canvas!.getBoundingClientRect();
@@ -168,7 +155,6 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
       const w = rect.width;
       const h = rect.height;
 
-      // 30fps throttle (20fps low-end)
       const interval = perf.isLowEnd ? 50 : 33;
       if (time - state.lastTime < interval) {
         state.animFrame = requestAnimationFrame(render);
@@ -185,23 +171,41 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
       const isMobile = w < 600;
       const maxDots = isMobile ? 8 : perf.isLowEnd ? 10 : CITY_DOTS.length;
 
-      // --- Kenya outline glow ---
+      // --- 3D Kenya outline layers ---
+      // Shadow
+      ctx.save();
+      ctx.translate(3, 4);
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = 'rgba(0, 40, 30, 0.1)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Outer glow
       drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.04)';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 10;
       ctx.stroke();
 
+      // Mid glow
       drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Main outline
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.22)';
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
+      // Bright edge
       drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(110, 231, 183, 0.06)';
+      ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Subtle interior fill
+      // Interior fill
       drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
       const fillGrad = ctx.createLinearGradient(pad, pad, pad + mapW, pad + mapH);
       fillGrad.addColorStop(0, 'rgba(16, 185, 129, 0.02)');
@@ -210,20 +214,22 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
       ctx.fillStyle = fillGrad;
       ctx.fill();
 
-      // --- Update traveling highlight ---
-      // Advance at ~0.4 cities per second
+      // Pulsing outline
+      const pulseA = 0.08 + 0.06 * Math.sin(time * 0.001);
+      drawKenyaPath(ctx, KENYA_OUTLINE, w, h, pad);
+      ctx.strokeStyle = `rgba(16, 185, 129, ${pulseA})`;
+      ctx.lineWidth = 2 + Math.sin(time * 0.0008) * 0.5;
+      ctx.stroke();
+
+      // --- Traveling highlight ---
       state.travelProgress += (dt / 1000) * 0.4;
       if (state.travelProgress >= 1) {
         state.travelProgress -= 1;
         state.routeIndex = (state.routeIndex + 1) % TRAVEL_ROUTE.length;
       }
 
-      const fromCity = TRAVEL_ROUTE[state.routeIndex];
-      const toCity = TRAVEL_ROUTE[(state.routeIndex + 1) % TRAVEL_ROUTE.length];
-      const fromIdx = getCityIndex(fromCity);
-      const toIdx = getCityIndex(toCity);
-
-      // Smooth ease-in-out interpolation
+      const fromIdx = getCityIndex(TRAVEL_ROUTE[state.routeIndex]);
+      const toIdx = getCityIndex(TRAVEL_ROUTE[(state.routeIndex + 1) % TRAVEL_ROUTE.length]);
       const t = state.travelProgress;
       const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
@@ -231,10 +237,20 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
       const fromY = pad + CITY_DOTS[fromIdx].y * mapH;
       const toX = pad + CITY_DOTS[toIdx].x * mapW;
       const toY = pad + CITY_DOTS[toIdx].y * mapH;
-      const highlightX = fromX + (toX - fromX) * ease;
-      const highlightY = fromY + (toY - fromY) * ease;
+      const hlX = fromX + (toX - fromX) * ease;
+      const hlY = fromY + (toY - fromY) * ease;
 
-      // --- Draw connecting lines between nearby cities (desktop only) ---
+      // Traveling beam
+      const beamGrad = ctx.createRadialGradient(hlX, hlY, 0, hlX, hlY, 50);
+      beamGrad.addColorStop(0, 'rgba(110, 231, 183, 0.3)');
+      beamGrad.addColorStop(0.4, 'rgba(16, 185, 129, 0.12)');
+      beamGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      ctx.fillStyle = beamGrad;
+      ctx.beginPath();
+      ctx.arc(hlX, hlY, 50, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Connecting lines
       if (!isMobile) {
         for (let i = 0; i < maxDots; i++) {
           for (let j = i + 1; j < maxDots; j++) {
@@ -256,43 +272,26 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
         }
       }
 
-      // --- Draw traveling highlight beam ---
-      // A soft glow that moves between cities
-      const beamGrad = ctx.createRadialGradient(highlightX, highlightY, 0, highlightX, highlightY, 40);
-      beamGrad.addColorStop(0, 'rgba(110, 231, 183, 0.25)');
-      beamGrad.addColorStop(0.4, 'rgba(16, 185, 129, 0.10)');
-      beamGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-      ctx.fillStyle = beamGrad;
-      ctx.beginPath();
-      ctx.arc(highlightX, highlightY, 40, 0, Math.PI * 2);
-      ctx.fill();
-
-      // --- Draw all city dots ---
+      // --- City dots ---
       for (let i = 0; i < maxDots; i++) {
         const city = CITY_DOTS[i];
         const x = pad + city.x * mapW;
         const y = pad + city.y * mapH;
 
-        // Distance from traveling highlight determines extra brightness
-        const dxH = x - highlightX;
-        const dyH = y - highlightY;
+        const dxH = x - hlX;
+        const dyH = y - hlY;
         const distH = Math.sqrt(dxH * dxH + dyH * dyH);
-        const proximity = Math.max(0, 1 - distH / 80); // 0 at far, 1 at center
+        const proximity = Math.max(0, 1 - distH / 80);
 
-        // Base breathing pulse
         const breathePhase = time * 0.001 + i * 0.7;
         const breathe = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(breathePhase));
-
-        // Combine base with proximity boost
         const alpha = Math.min(breathe + proximity * 0.5, 1);
         const baseR = 3 + proximity * 2;
 
-        // Ring pulse
         const ringProgress = 0.5 + 0.5 * Math.sin(time * 0.0008 + i * 1.1);
         const ringR = baseR * 2 + ringProgress * baseR * 4;
         const ringAlpha = ringProgress * 0.5;
 
-        // Expanding ring
         if (ringAlpha > 0.01) {
           ctx.strokeStyle = `rgba(16, 185, 129, ${ringAlpha * 0.6})`;
           ctx.lineWidth = 1.5;
@@ -301,7 +300,6 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
           ctx.stroke();
         }
 
-        // Outer glow
         const glowR = baseR * 5;
         const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
         glow.addColorStop(0, `rgba(16, 185, 129, ${alpha * 0.35})`);
@@ -312,13 +310,11 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
         ctx.arc(x, y, glowR, 0, Math.PI * 2);
         ctx.fill();
 
-        // Inner solid dot
         ctx.fillStyle = `rgba(16, 185, 129, ${Math.min(alpha + 0.3, 1)})`;
         ctx.beginPath();
         ctx.arc(x, y, baseR, 0, Math.PI * 2);
         ctx.fill();
 
-        // Bright core
         ctx.fillStyle = `rgba(200, 255, 230, ${alpha * 0.8})`;
         ctx.beginPath();
         ctx.arc(x, y, baseR * 0.4, 0, Math.PI * 2);
@@ -337,7 +333,6 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
     };
   }, [cleanup, perf.reducedMotion, perf.dpr, perf.isLowEnd]);
 
-  // Cleanup on unmount
   useEffect(() => cleanup, [cleanup]);
 
   return (
@@ -361,10 +356,10 @@ export function KenyaMapLoadingScreen({ onReady }: { onReady?: () => void }) {
         ref={canvasRef}
         aria-hidden="true"
         style={{
-          width: '70vmin',
-          maxWidth: 420,
+          width: '75vmin',
+          maxWidth: 520,
           height: 'auto',
-          aspectRatio: '1 / 1.15',
+          aspectRatio: `${LNG_RANGE} / ${LAT_RANGE}`,
         }}
       />
       <div style={{ marginTop: 32, textAlign: 'center' }}>
