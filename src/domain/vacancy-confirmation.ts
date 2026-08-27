@@ -2,7 +2,7 @@ import type { VacancyConfirmationIntelligenceSnapshot } from './vacancy-confirma
 import type { PropertyCategoryId } from './types';
 
 export type VacancyConfirmationPropertyCategory = Extract<PropertyCategoryId, 'houses' | 'shops' | 'offices'>;
-export type VacancyConfirmationStatus = 'confirmed-vacancy' | 'grace-period' | 'waiting-for-verification' | 'occupied';
+export type VacancyConfirmationStatus = 'confirmed-vacancy' | 'grace-period' | 'waiting-for-verification' | 'unverified-vacancy' | 'occupied';
 export type VacancyConfirmationAction = 'confirm-still-vacant' | 'mark-occupied' | 'reconfirm-after-waiting';
 
 export interface VacancyConfirmationRecord {
@@ -54,6 +54,20 @@ export const DAILY_VACANCY_CONFIRMATION_FOUNDATION = {
     visibleInCustomerSearch: false,
     unlockThisListingAvailable: false,
     verifiedAccessAvailable: false
+  },
+  unverifiedVacancyPolicy: {
+    visibleInCustomerSearch: true,
+    unlockThisListingAvailable: true,
+    verifiedAccessAvailable: false,
+    viewingRequestsAvailable: false,
+    unlockDiscountPercentage: 20,
+    clearLabelRequired: true,
+    customerWarning: 'This vacancy has not been confirmed by the property manager. It may or may not still be available.',
+    customerMayUnlockAnyway: true,
+    unlockPriceReduction: '20% off the standard Unlock This Listing price for this unit.',
+    becomesUnverifiedAfterDays: 3,
+    ownerNotifiedAfterDays: 2,
+    weeklyDormantOutreachContinues: true
   },
   futureIntelligenceInPrompt10B: [
     'Search Priority behaviour',

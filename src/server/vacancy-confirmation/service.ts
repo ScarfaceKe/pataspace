@@ -82,6 +82,26 @@ export function deriveVacancyConfirmationStatus(record: VacancyConfirmationRecor
   if (current <= graceUntil) {
     return withIntelligence({ ...record, status: 'grace-period', visibleInCustomerSearch: true, unlockThisListingAvailable: true, verifiedAccessAvailable: true, viewingRequestsAvailable: true }, at);
   }
+  // After grace period: transition to unverified-vacancy (still visible but with warning)
+  // Only hide completely after 1 week (the one-week removal rule from vacancy confirmation intelligence)
+  const unverifiedSince = record.waitingForVerificationAt ?? new Date(graceUntil).toISOString();
+  const unverifiedMs = current - new Date(unverifiedSince).getTime();
+  const ONE_WEEK_MS = 7 * 24 * HOUR_MS;
+
+  if (unverifiedMs <= ONE_WEEK_MS) {
+    // Still within the unverified window: visible in search but with warning, 20% unlock discount
+    return withIntelligence({
+      ...record,
+      status: 'unverified-vacancy',
+      visibleInCustomerSearch: true,
+      unlockThisListingAvailable: true,
+      verifiedAccessAvailable: false,
+      viewingRequestsAvailable: false,
+      waitingForVerificationAt: unverifiedSince
+    }, at);
+  }
+
+  // After 1 week unconfirmed: fully hidden (one-week removal rule)
   return withIntelligence({
     ...record,
     status: 'waiting-for-verification',
@@ -89,7 +109,7 @@ export function deriveVacancyConfirmationStatus(record: VacancyConfirmationRecor
     unlockThisListingAvailable: false,
     verifiedAccessAvailable: false,
     viewingRequestsAvailable: false,
-    waitingForVerificationAt: record.waitingForVerificationAt ?? new Date(graceUntil).toISOString()
+    waitingForVerificationAt: unverifiedSince
   }, at);
 }
 
@@ -181,4 +201,43 @@ export async function getAllVacancyConfirmationRecords(): Promise<VacancyConfirm
   const updated = data.records.map((record) => deriveVacancyConfirmationStatus(record));
   if (JSON.stringify(updated) !== JSON.stringify(data.records)) await writeVacancyConfirmationStore({ records: updated });
   return updated;
+}
+
+/**
+ * Check if a property has any unverified vacancy units.
+ * Used by the unlock pricing system to apply the 20% discount.
+ */
+export async function hasUnverifiedVacancyForProperty(propertyId: string): Promise<boolean> {
+  const records = await getVacancyConfirmationRecordsForProperty(propertyId);
+  return records.some((r) => r.status === 'unverified-vacancy');
+}
+
+/**
+ * Get unverified vacancy records for a property.
+ * Used by match engine to show warning labels on unverified listings.
+ */
+export async function getUnverifiedVacancyRecords(propertyId: string): Promise<VacancyConfirmationRecord[]> {
+  const records = await getVacancyConfirmationRecordsForProperty(propertyId);
+  return records.filter((r) => r.status === 'unverified-vacancy');
+}
+
+/**
+ * Calculate the discounted unlock price for an unverified vacancy listing.
+ * Applies 20% discount off the standard Unlock This Listing price.
+ */
+export function calculateUnverifiedVacancyDiscount(standardPrice: number): {
+  originalPrice: number;
+  discountedPrice: number;
+  discountPercentage: number;
+  discountLabel: string;
+} {
+  const discountPercentage = 20;
+  const discountAmount = Math.round(standardPrice * (discountPercentage / 100));
+  const discountedPrice = standardPrice - discountAmount;
+  return {
+    originalPrice: standardPrice,
+    discountedPrice,
+    discountPercentage,
+    discountLabel: `${discountPercentage}% off — Vacancy not yet confirmed by property manager`
+  };
 }
