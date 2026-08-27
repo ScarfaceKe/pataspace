@@ -272,59 +272,48 @@ export async function processIncomingMessage(
 }
 
 /**
- * Check for conversations that need owner escalation.
- * Called daily — after 7 days of PM non-response, owner gets notified.
- * The listing is no longer visible in search at this point.
+ * FULL 30-DAY ESCALATION FLOW
+ * 
+ * Phase 1 (Days 1-7): Property Manager
+ * Phase 2 (Days 7-14): Owner takes over
+ * Phase 3 (Days 14-30): Every 3 days to ALL contacts
+ * After 30 days: Remove listings forever
  */
 export async function checkAndEscalateToOwner(): Promise<number> {
   const store = await readConversationStore();
   const now = Date.now();
+  const currentHour = (new Date().getUTCHours() + 3) % 24; // EAT
   let escalated = 0;
+  const appUrl = process.env.APP_URL || 'https://pataspace.freebuff.app';
 
   for (const conversation of store.conversations) {
+    const createdAt = new Date(conversation.createdAt).getTime();
+    const daysSinceCreation = Math.floor((now - createdAt) / (24 * 60 * 60 * 1000));
+    const quickVerifyUrl = `${appUrl}/quick-verify?propertyId=${encodeURIComponent(conversation.propertyId)}&name=${encodeURIComponent(conversation.propertyName)}`;
+
+    // === PHASE 1: Daily reminders to PM (Days 2-7) ===
     if (
       conversation.state === 'awaiting-vacancy-response' &&
       conversation.currentRecipientRole === 'property-manager' &&
-      conversation.propertyOwnerUserId &&
-      conversation.propertyOwnerPhone &&
-      conversation.escalationLevel === 0
+      daysSinceCreation >= 2 && daysSinceCreation < 7 &&
+      currentHour === ESCALATION_RULES.firstMessageHour &&
+      !isQuietHours()
     ) {
-      const lastResponse = conversation.lastResponseAt
-        ? new Date(conversation.lastResponseAt).getTime()
-        : new Date(conversation.createdAt).getTime();
-      const daysSince = Math.floor((now - lastResponse) / (24 * 60 * 60 * 1000));
-
-      if (daysSince >= ESCALATION_RULES.ownerNotificationAfterDays && !isQuietHours()) {
-        // Escalate to owner
+      // Send daily reminder with link
+      const lastMsgDay = conversation.lastMessageAt ? 
+        Math.floor((now - new Date(conversation.lastMessageAt).getTime()) / (24 * 60 * 60 * 1000)) : 99;
+      
+      if (lastMsgDay >= 1) { // Only send if last message was yesterday or more
         const greeting = getSmartGreeting('en');
-        const appUrl = process.env.APP_URL || 'https://pataspace.freebuff.app';
-        const quickVerifyUrl = `${appUrl}/quick-verify?propertyId=${encodeURIComponent(conversation.propertyId)}&name=${encodeURIComponent(conversation.propertyName)}`;
-        const template = VACANCY_CONFIRMATION_TEMPLATES.ownerEscalation.en(
+        const template = VACANCY_CONFIRMATION_TEMPLATES.insistentReminder.en(
           conversation.propertyName,
-          daysSince,
+          conversation.unitIdentifiers.length,
           quickVerifyUrl,
         );
         const messageText = `${greeting}\n\n${template}`;
 
-        // Create a new conversation for the owner
-        const ownerConversation: WhatsAppVacancyConversation = {
-          ...conversation,
-          id: randomUUID(),
-          currentRecipientUserId: conversation.propertyOwnerUserId,
-          currentRecipientRole: 'property-owner',
-          currentRecipientPhone: conversation.propertyOwnerPhone,
-          conversationType: 'owner-escalation',
-          state: 'escalated-to-owner',
-          escalationLevel: 1,
-          escalationTriggeredAt: nowIso(),
-          daysSinceLastResponse: daysSince,
-          messageHistory: [],
-          createdAt: nowIso(),
-          lastMessageAt: nowIso(),
-        };
-
-        await sendWhatsAppMessage(ownerConversation, messageText);
-        ownerConversation.messageHistory.push({
+        await sendWhatsAppMessage(conversation, messageText);
+        conversation.messageHistory.push({
           id: randomUUID(),
           direction: 'outbound',
           senderRole: 'system',
@@ -332,15 +321,188 @@ export async function checkAndEscalateToOwner(): Promise<number> {
           language: 'en',
           timestamp: nowIso(),
         });
-
-        // Update original conversation
-        conversation.escalationLevel = 1;
-        conversation.escalationTriggeredAt = nowIso();
-        conversation.daysSinceLastResponse = daysSince;
-
-        store.conversations.push(ownerConversation);
+        conversation.lastMessageAt = nowIso();
         escalated++;
       }
+    }
+
+    // === PHASE 2: Owner escalation at 9 AM (Day 7) ===
+    if (
+      conversation.state === 'awaiting-vacancy-response' &&
+      conversation.currentRecipientRole === 'property-manager' &&
+      conversation.propertyOwnerUserId &&
+      conversation.propertyOwnerPhone &&
+      conversation.escalationLevel === 0 &&
+      daysSinceCreation >= ESCALATION_RULES.ownerNotificationAfterDays &&
+      currentHour === ESCALATION_RULES.ownerNotificationHour &&
+      !isQuietHours()
+    ) {
+      // Create owner conversation at 9 AM
+      const greeting = getSmartGreeting('en');
+      const template = VACANCY_CONFIRMATION_TEMPLATES.ownerEscalation.en(
+        conversation.propertyName,
+        daysSinceCreation,
+        quickVerifyUrl,
+      );
+      const messageText = `${greeting}\n\n${template}`;
+
+      const ownerConversation: WhatsAppVacancyConversation = {
+        ...conversation,
+        id: randomUUID(),
+        currentRecipientUserId: conversation.propertyOwnerUserId,
+        currentRecipientRole: 'property-owner',
+        currentRecipientPhone: conversation.propertyOwnerPhone,
+        conversationType: 'owner-escalation',
+        state: 'escalated-to-owner',
+        escalationLevel: 1,
+        escalationTriggeredAt: nowIso(),
+        daysSinceLastResponse: daysSinceCreation,
+        messageHistory: [],
+        createdAt: nowIso(),
+        lastMessageAt: nowIso(),
+      };
+
+      await sendWhatsAppMessage(ownerConversation, messageText);
+      ownerConversation.messageHistory.push({
+        id: randomUUID(),
+        direction: 'outbound',
+        senderRole: 'system',
+        content: messageText,
+        language: 'en',
+        timestamp: nowIso(),
+      });
+
+      conversation.escalationLevel = 1;
+      conversation.escalationTriggeredAt = nowIso();
+      conversation.daysSinceLastResponse = daysSinceCreation;
+
+      store.conversations.push(ownerConversation);
+      escalated++;
+    }
+
+    // === PHASE 2: Owner 12h/24h escalation (Days 7-14) ===
+    if (
+      conversation.state === 'escalated-to-owner' &&
+      conversation.currentRecipientRole === 'property-owner' &&
+      !isQuietHours()
+    ) {
+      const ownerCreatedAt = new Date(conversation.createdAt).getTime();
+      const hoursSinceOwner = (now - ownerCreatedAt) / (60 * 60 * 1000);
+
+      // 12h: Insistent reminder to owner
+      if (hoursSinceOwner >= ESCALATION_RULES.ownerResendAfterHours && hoursSinceOwner < ESCALATION_RULES.ownerAiChatAfterHours && conversation.escalationLevel === 1) {
+        const greeting = getSmartGreeting('en');
+        const template = VACANCY_CONFIRMATION_TEMPLATES.ownerInsistentReminder.en(
+          conversation.propertyName,
+          conversation.unitIdentifiers.length,
+          quickVerifyUrl,
+        );
+        const messageText = `${greeting}\n\n${template}`;
+
+        await sendWhatsAppMessage(conversation, messageText);
+        conversation.messageHistory.push({
+          id: randomUUID(),
+          direction: 'outbound',
+          senderRole: 'system',
+          content: messageText,
+          language: 'en',
+          timestamp: nowIso(),
+        });
+        conversation.escalationLevel = 2;
+        conversation.lastMessageAt = nowIso();
+        escalated++;
+      }
+
+      // 24h: AI asks owner specific units
+      if (hoursSinceOwner >= ESCALATION_RULES.ownerAiChatAfterHours && conversation.escalationLevel <= 2) {
+        const greeting = getSmartGreeting('en');
+        const template = VACANCY_CONFIRMATION_TEMPLATES.ownerAiChatPrompt.en(
+          conversation.propertyName,
+          conversation.unitIdentifiers,
+        );
+        const messageText = `${greeting}\n\n${template}`;
+
+        await sendWhatsAppMessage(conversation, messageText);
+        conversation.messageHistory.push({
+          id: randomUUID(),
+          direction: 'outbound',
+          senderRole: 'system',
+          content: messageText,
+          language: 'en',
+          timestamp: nowIso(),
+        });
+        conversation.escalationLevel = 3;
+        conversation.lastMessageAt = nowIso();
+        escalated++;
+      }
+    }
+
+    // === PHASE 3: Every 3 days, message ALL contacts (Days 14-30) ===
+    if (
+      daysSinceCreation >= ESCALATION_RULES.listingPausedAfterDays &&
+      daysSinceCreation < ESCALATION_RULES.permanentRemovalAfterDays &&
+      conversation.escalationLevel >= 1 &&
+      currentHour === ESCALATION_RULES.firstMessageHour &&
+      !isQuietHours()
+    ) {
+      // Check if we sent a Phase 3 message recently (within 2 days)
+      const lastPhase3Msg = conversation.messageHistory.find(
+        (m) => m.direction === 'outbound' && 
+        m.content.includes('paused and not visible') &&
+        (now - new Date(m.timestamp).getTime()) < (2 * 24 * 60 * 60 * 1000)
+      );
+
+      if (!lastPhase3Msg) {
+        // Send to ALL contacts for this property
+        const contacts = [
+          { userId: conversation.propertyOwnerUserId, phone: conversation.propertyOwnerPhone, role: 'property owner' },
+          { userId: conversation.originalPropertyManagerUserId, phone: conversation.originalPropertyManagerPhone, role: 'property manager' },
+        ].filter((c) => c.userId && c.phone);
+
+        for (const contact of contacts) {
+          const greeting = getSmartGreeting('en');
+          const template = VACANCY_CONFIRMATION_TEMPLATES.phase3RepeatOutreach.en(
+            conversation.propertyName,
+            contact.role,
+            quickVerifyUrl,
+          );
+          const messageText = `${greeting}\n\n${template}`;
+
+          const phase3Conversation: WhatsAppVacancyConversation = {
+            ...conversation,
+            id: randomUUID(),
+            currentRecipientUserId: contact.userId!,
+            currentRecipientRole: contact.role.includes('owner') ? 'property-owner' : 'property-manager',
+            currentRecipientPhone: contact.phone!,
+            conversationType: 'owner-escalation',
+            state: 'escalated-to-owner',
+            escalationLevel: 4,
+            messageHistory: [],
+            createdAt: nowIso(),
+            lastMessageAt: nowIso(),
+          };
+
+          await sendWhatsAppMessage(phase3Conversation, messageText);
+          phase3Conversation.messageHistory.push({
+            id: randomUUID(),
+            direction: 'outbound',
+            senderRole: 'system',
+            content: messageText,
+            language: 'en',
+            timestamp: nowIso(),
+          });
+
+          store.conversations.push(phase3Conversation);
+          escalated++;
+        }
+      }
+    }
+
+    // === AFTER 30 DAYS: Mark for permanent removal ===
+    if (daysSinceCreation >= ESCALATION_RULES.permanentRemovalAfterDays && conversation.escalationLevel < 10) {
+      conversation.escalationLevel = 10; // Mark as permanently removed
+      conversation.state = 'completed';
+      escalated++;
     }
   }
 

@@ -56,8 +56,8 @@ export interface WhatsAppVacancyConversation {
   /** For partial updates — which units they said are vacant */
   confirmedVacantUnits: string[];
   confirmedOccupiedUnits: string[];
-  /** Escalation tracking */
-  escalationLevel: 0 | 1 | 2;
+  /** Escalation tracking: 0=initial, 1=first reminder, 2=AI chat, 3=owner, 4=phase3, 10=permanently removed */
+  escalationLevel: number;
   escalationTriggeredAt?: string;
   daysSinceLastResponse: number;
   /** Timing */
@@ -119,22 +119,44 @@ export const QUIET_HOURS = {
   timezone: 'Africa/Nairobi',
 };
 
-/** Escalation rules — NEW FLOW: Link first, then insist, then AI chat, then owner */
+/** Escalation rules — FULL 30-DAY FLOW */
 export const ESCALATION_RULES = {
+  // === PHASE 1: Property Manager (Days 1-7) ===
+  /** Step 1: First message at 9 AM */
+  firstMessageHour: 9,
   /** Step 2: Hours after first link before resending with insistence */
   resendLinkAfterHours: 12,
-  /** Step 3: Hours after insistence before AI asks specific units via WhatsApp chat */
+  /** Step 3: Hours after insistence before AI asks specific units */
   aiChatAfterHours: 24,
-  /** Step 4: Days after PM/owner non-response before owner is notified */
+  /** Daily morning reminders continue from Day 2 to Day 7 */
+  dailyReminderEnabled: true,
+  /** Phase 1 ends: Days after PM non-response before owner is notified */
   ownerNotificationAfterDays: 7,
-  /** Days after owner notification before system takes final action */
-  finalActionAfterOwnerDays: 14,
-  /** Maximum messages per day per person — keeps costs low */
+  
+  // === PHASE 2: Owner (Days 7-14) ===
+  /** Owner notification time: 9 AM EAT (not 6:30 AM) */
+  ownerNotificationHour: 9,
+  /** Owner gets same 12h/24h escalation as PM */
+  ownerResendAfterHours: 12,
+  ownerAiChatAfterHours: 24,
+  /** Phase 2 ends: Listing paused after owner also fails to verify */
+  listingPausedAfterDays: 14,
+  
+  // === PHASE 3: Repeated Outreach (Days 14-30) ===
+  /** Every 3 days, message ALL contacts (owner, PM, leasing agent) */
+  phase3RepeatDays: 3,
+  /** Phase 3 ends: Stop contacting after 30 days */
+  maxContactDays: 30,
+  /** After 30 days: Remove listings forever */
+  permanentRemovalAfterDays: 30,
+  
+  // === General ===
+  /** Maximum messages per day per person */
   maxMessagesPerDay: 15,
   /** Weekly dormant outreach frequency */
   dormantOutreachFrequencyDays: 7,
   /** Maximum messages per single conversation */
-  maxMessagesPerConversation: 8,
+  maxMessagesPerConversation: 12,
 };
 
 /** Vacancy confirmation message templates — NEW FLOW: Link → Insist → AI Chat → Owner */
@@ -205,18 +227,78 @@ Naweza kuthibitisha moja kwa moja hapa.`,
     sw: (vacantCount: number, occupiedCount: number) =>
       `Imekamilika! ${vacantCount} tupu, ${occupiedCount} na mwenye. Orodha zimesasishwa.`,
   },
-  /** Step 4: Owner notification after 7 days (not 2 days) */
+  /** Step 4: Owner notification at 9 AM — gender-neutral */
   ownerEscalation: {
     en: (propertyName: string, days: number, quickVerifyUrl: string) =>
       `${propertyName}: No vacancy confirmation for ${days} days. Your listing is no longer visible in customer searches.
 
-Verify your units here:
+As the property owner, please verify your units:
 ${quickVerifyUrl}`,
     sw: (propertyName: string, days: number, quickVerifyUrl: string) =>
       `${propertyName}: Hakuna uthibitisho kwa siku ${days}. Orodha yako haijaonekana kwenye utafutaji.
 
-Kuthibitisha vitengo hapa:
+Kama mmiliki wa nyumba, tafadhali kuthibitisha vitengo vyako:
 ${quickVerifyUrl}`,
+  },
+  /** Phase 2: Owner insistent reminder (12h after first owner message) */
+  ownerInsistentReminder: {
+    en: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
+      `${propertyName}: Important — your ${unitCount} unit${unitCount > 1 ? 's' : ''} must be verified to appear in customer searches.
+
+Verify your listing now:
+${quickVerifyUrl}`,
+    sw: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
+      `${propertyName}: Muhimu — vitengo vyako ${unitCount} vinahitaji kuthibitishwa ili kuonekana kwenye utafutaji.
+
+Kuthibitisha orodha yako sasa:
+${quickVerifyUrl}`,
+  },
+  /** Phase 2: Owner AI chat (24h after first owner message) */
+  ownerAiChatPrompt: {
+    en: (propertyName: string, units: string[]) =>
+      `${propertyName}: Tell me which units are still vacant:
+${units.join(', ')}
+
+Reply like: "A1, A3" or "all still vacant" or "all occupied"
+
+I can verify them directly for you right here.`,
+    sw: (propertyName: string, units: string[]) =>
+      `${propertyName}: Niambii ni vitengo gani bado tupu:
+${units.join(', ')}
+
+Jibu kama: "A1, A3" au "vyote bado" au "vyote vimetwajwa"
+
+Naweza kuthibitisha moja kwa moja hapa.`,
+  },
+  /** Phase 2: Daily reminder to owner (Days 8-14) */
+  ownerDailyReminder: {
+    en: (propertyName: string, quickVerifyUrl: string) =>
+      `${propertyName}: Please verify your listing to appear in customer searches.
+
+Verify here:
+${quickVerifyUrl}`,
+    sw: (propertyName: string, quickVerifyUrl: string) =>
+      `${propertyName}: Tafadhali kuthibitisha orodha yako ili kuonekana kwenye utafutaji.
+
+Kuthibitisha hapa:
+${quickVerifyUrl}`,
+  },
+  /** Phase 3: Message ALL contacts every 3 days (Days 14-30) */
+  phase3RepeatOutreach: {
+    en: (propertyName: string, role: string, quickVerifyUrl: string) =>
+      `${propertyName}: Your listing is paused and not visible in searches.
+
+As the ${role}, please verify your vacancy:
+${quickVerifyUrl}
+
+Verify to be ranked again in searches.`,
+    sw: (propertyName: string, role: string, quickVerifyUrl: string) =>
+      `${propertyName}: Orodha yako imesimamishwa na haijaonekana kwenye utafutaji.
+
+Kama ${role}, tafadhali kuthibitisha nafasi yako tupu:
+${quickVerifyUrl}
+
+Kuthibitisha ili upate nafasi tena kwenye utafutaji.`,
   },
   dormantOutreach: {
     en: (managerName: string) =>
