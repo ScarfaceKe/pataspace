@@ -10,6 +10,9 @@ function clientIp(request: NextRequest): string {
 }
 
 function rateLimitRule(pathname: string): RateLimitRule | null {
+  if (pathname === '/api/auth/login') return { key: 'auth-login', limit: 10, windowMs: 15 * 60_000 };
+  if (pathname === '/api/auth/register') return { key: 'auth-register', limit: 5, windowMs: 30 * 60_000 };
+  if (pathname === '/api/auth/forgot-password') return { key: 'auth-forgot', limit: 5, windowMs: 15 * 60_000 };
   if (pathname === '/api/viewings/request') return { key: 'viewing-request', limit: 10, windowMs: 10 * 60_000 };
   if (pathname.startsWith('/api/payments/')) return { key: 'payment', limit: 8, windowMs: 5 * 60_000 };
   if (pathname.startsWith('/api/communication/') || pathname.includes('contact')) return { key: 'contact', limit: 20, windowMs: 5 * 60_000 };
