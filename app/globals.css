@@ -661,13 +661,15 @@ textarea:focus-visible {
 }
 
 .field-label input,
-.field-label select {
+.field-label select,
+.field-label textarea {
   min-height: 52px;
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 0 14px;
   background: #fff;
   color: var(--text);
+  font-size: 16px; /* Prevents iOS auto-zoom on focus */
 }
 
 .field-label span,
@@ -789,7 +791,7 @@ textarea:focus-visible {
 }
 
 .property-category-card {
-  min-height: 160px;
+  min-height: 140px;
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 18px;
@@ -4138,7 +4140,7 @@ body {
   }
 
   .property-category-card {
-    min-height: 48px;
+    min-height: 72px;
     padding: 1rem;
   }
 }
@@ -4743,3 +4745,389 @@ body:has(#ps-immediate-loader:not([style*="opacity: 0"])) {
   color: rgba(232,245,240,0.3);
 }
 .wa-empty-state p { margin: 0; font-size: 0.9rem; }
+
+/* =========== COMPREHENSIVE MOBILE FIXES =========== */
+
+/* Prevent iOS auto-zoom on all input focus globally */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Property result cards: ensure image doesn't break on narrow screens */
+@media (max-width: 480px) {
+  .property-result-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+  .property-image-frame {
+    min-height: 120px;
+    max-height: 180px;
+  }
+  .property-card-body h3 {
+    font-size: 1rem;
+  }
+}
+
+/* Dashboard page: ensure proper spacing on very small screens */
+@media (max-width: 375px) {
+  .dashboard-page {
+    padding: 16px 0;
+  }
+  .dashboard-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+  .dashboard-card h1 {
+    font-size: 1.6rem;
+  }
+  .role-list article {
+    padding: 12px;
+  }
+}
+
+/* Entry cards: better touch targets on small screens */
+@media (max-width: 520px) {
+  .entry-card {
+    min-height: 120px;
+    padding: 14px;
+  }
+  .entry-heading h2 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Match wizard: prevent overflow on narrow screens */
+@media (max-width: 480px) {
+  .match-wizard {
+    padding: 0.75rem 0.5rem;
+  }
+  .wizard-panel {
+    gap: 10px;
+  }
+  .wizard-panel h2 {
+    font-size: 1.2rem;
+  }
+  .match-progress,
+  .wizard-controls {
+    gap: 8px;
+  }
+}
+
+/* Auth pages: ensure form fits on small screens */
+@media (max-width: 375px) {
+  .auth-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Hero section: prevent text overflow on very small screens */
+@media (max-width: 375px) {
+  .hero-eyebrow {
+    font-size: 0.7rem;
+  }
+  .hero-subtitle {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .hero-trust-chips {
+    gap: 0.375rem;
+  }
+  .hero-trust-chips span {
+    font-size: 0.65rem;
+    padding: 0 0.5rem;
+    min-height: 1.75rem;
+  }
+  .hero-status-bar {
+    font-size: 0.65rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Premium sections: prevent overflow on small screens */
+@media (max-width: 480px) {
+  .premium-section {
+    padding: 1.5rem 0.75rem;
+  }
+  .premium-heading h2 {
+    font-size: 1.3rem;
+  }
+  .premium-heading p {
+    font-size: 0.85rem;
+  }
+  .dark-card {
+    min-height: auto;
+    padding: 1rem;
+  }
+  .dark-card h3 {
+    font-size: 0.95rem;
+  }
+  .dark-card p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Footer: ensure it stacks properly on small screens */
+@media (max-width: 375px) {
+  .premium-footer-inner {
+    padding: 1.5rem 1rem;
+  }
+  .footer-cta h2 {
+    font-size: 1.2rem;
+  }
+  .footer-columns {
+    gap: 1.25rem;
+  }
+  .footer-col h4 {
+    font-size: 0.85rem;
+  }
+}
+
+/* Property registration: prevent overflow on small screens */
+@media (max-width: 375px) {
+  .property-registration-card {
+    width: 100%;
+    padding: 14px;
+    border-radius: 16px;
+  }
+  .business-toggle {
+    min-height: 90px;
+    padding: 12px;
+  }
+  .link-foundation-card {
+    padding: 12px;
+  }
+}
+
+/* Prevent horizontal scroll from any fixed/absolute elements */
+@media (max-width: 640px) {
+  .premium-hero,
+  .premium-footer,
+  .premium-section-dark {
+    overflow: hidden;
+  }
+}
+
+/* Ensure all interactive elements have proper touch targets */
+@media (max-width: 640px) {
+  .pill-btn,
+  .primary-action,
+  .secondary-action,
+  button[type="submit"],
+  .entry-card,
+  .category-option,
+  .property-category-card,
+  .role-choice,
+  .business-toggle {
+    min-height: 44px;
+  }
+}
+
+/* Skeleton loaders: single column on mobile */
+@media (max-width: 640px) {
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+  .skeleton-pill {
+    width: 120px;
+  }
+}
+
+/* Notification settings: proper layout on mobile */
+@media (max-width: 480px) {
+  .profile-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* Quick verify: ensure proper spacing on very small screens */
+@media (max-width: 375px) {
+  .qv-container {
+    padding: 0;
+  }
+  .qv-header h1 {
+    font-size: 1.3rem;
+  }
+  .qv-unit-card {
+    padding: 0.75rem;
+  }
+  .qv-unit-id {
+    font-size: 0.9rem;
+  }
+}
+
+/* WhatsApp section: proper layout on mobile */
+@media (max-width: 480px) {
+  .wa-section {
+    padding: 1rem;
+  }
+  .wa-stats-row {
+    gap: 0.5rem;
+  }
+  .wa-stat-card {
+    min-width: 80px;
+    padding: 0.5rem;
+  }
+  .wa-stat-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* Scroll progress bar: thin on mobile */
+@media (max-width: 640px) {
+  .scroll-progress-bar {
+    height: 2px;
+  }
+}
+
+/* Smooth scroll behavior */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Ensure canvas animations don't cause layout shift on mobile */
+@media (max-width: 640px) {
+  .kenya-map-container,
+  .particle-constellation-container,
+  .morphing-blob-container {
+    max-width: 100vw;
+    overflow: hidden;
+  }
+}
+
+/* Premium hero glow orbs: scale down on mobile */
+@media (max-width: 640px) {
+  .hero-glow-orb-1 {
+    width: 250px;
+    height: 250px;
+  }
+  .hero-glow-orb-2 {
+    width: 200px;
+    height: 200px;
+  }
+  .hero-glow-orb-3 {
+    width: 150px;
+    height: 150px;
+  }
+  .section-glow-orb {
+    display: none;
+  }
+}
+
+/* Premium stats: ensure readability on small screens */
+@media (max-width: 375px) {
+  .premium-stat-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .premium-stat-number {
+    font-size: 1.5rem;
+  }
+  .premium-stat-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* Location chips: prevent overflow on small screens */
+@media (max-width: 480px) {
+  .premium-location-strip {
+    gap: 0.375rem;
+  }
+  .premium-location-chip {
+    font-size: 0.75rem;
+    min-height: 2rem;
+    padding: 0 0.625rem;
+  }
+}
+
+/* Trust section: better layout on mobile */
+@media (max-width: 480px) {
+  .premium-trust-grid {
+    gap: 0.75rem;
+  }
+  .premium-trust-card {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .premium-trust-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Featured properties: single column on mobile */
+@media (max-width: 640px) {
+  .featured-properties-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* How it works: single column on mobile (already handled at 768px, adding smaller breakpoint) */
+@media (max-width: 480px) {
+  .how-it-works-card {
+    padding: 1.25rem 1rem;
+  }
+  .how-it-works-number {
+    font-size: 1.5rem;
+  }
+  .how-it-works-icon {
+    font-size: 1.5rem;
+  }
+}
+
+/* Testimonials section: proper layout on mobile */
+@media (max-width: 480px) {
+  .testimonials-section .premium-heading p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Prevent text overflow in any card */
+.role-list article h3,
+.dark-card h3,
+.how-it-works-card h3,
+.premium-trust-card h3 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Ensure images don't overflow their containers */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent long URLs from breaking layout */
+a {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Smooth transitions for interactive elements */
+@media (hover: hover) and (pointer: fine) {
+  .entry-card,
+  .dark-card,
+  .property-category-card,
+  .business-toggle,
+  .role-choice {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+}
