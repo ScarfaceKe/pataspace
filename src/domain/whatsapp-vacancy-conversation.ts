@@ -137,12 +137,18 @@ export const ESCALATION_RULES = {
 
 /** Vacancy confirmation message templates — LEAN: short, precise, cost-efficient */
 export const VACANCY_CONFIRMATION_TEMPLATES = {
-  /** Step 1: Ask if they can verify on the app (1 message, short) */
+  /** Step 1: Ask if they can verify on the app (1 message, short) — includes quick-verify link */
   appFirstPrompt: {
-    en: (propertyName: string, unitCount: number) =>
-      `${propertyName}: ${unitCount} unit${unitCount > 1 ? 's' : ''} need${unitCount === 1 ? 's' : ''} confirmation. Verify on PataSpace today?`,
-    sw: (propertyName: string, unitCount: number) =>
-      `${propertyName}: Vitengo ${unitCount} vinahitaji uthibitisho. Kuthibitisha kwenye PataSpace leo?`,
+    en: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
+      `${propertyName}: ${unitCount} unit${unitCount > 1 ? 's' : ''} need${unitCount === 1 ? 's' : ''} confirmation.
+
+Tap to verify now:
+${quickVerifyUrl}`,
+    sw: (propertyName: string, unitCount: number, quickVerifyUrl: string) =>
+      `${propertyName}: Vitengo ${unitCount} vinahitaji uthibitisho.
+
+Bonyeza kuthibitisha sasa:
+${quickVerifyUrl}`,
   },
   /** Step 2: If no app action after 12h, ask about specific units */
   unitDetailPrompt: {
@@ -171,10 +177,16 @@ export const VACANCY_CONFIRMATION_TEMPLATES = {
       `Imekamilika! ${vacantCount} tupu, ${occupiedCount} na mwenye. Orodha zimesasishwa.`,
   },
   ownerEscalation: {
-    en: (propertyName: string, days: number) =>
-      `${propertyName}: No vacancy confirmation for ${days} days. Manager hasn't responded. Please verify your units on PataSpace.`,
-    sw: (propertyName: string, days: number) =>
-      `${propertyName}: Hakuna uthibitisho kwa siku ${days}. Meneja hawajajibu. Tafadhali kuthibitisha kwenye PataSpace.`,
+    en: (propertyName: string, days: number, quickVerifyUrl: string) =>
+      `${propertyName}: No vacancy confirmation for ${days} days. Manager hasn't responded.
+
+Verify your units here:
+${quickVerifyUrl}`,
+    sw: (propertyName: string, days: number, quickVerifyUrl: string) =>
+      `${propertyName}: Hakuna uthibitisho kwa siku ${days}. Meneja hawajajibu.
+
+Kuthibitisha vitengo hapa:
+${quickVerifyUrl}`,
   },
   dormantOutreach: {
     en: (managerName: string) =>

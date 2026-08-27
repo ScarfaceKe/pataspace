@@ -60,9 +60,12 @@ export async function startVacancyConfirmationConversation(input: {
   if (recentMessages.length >= ESCALATION_RULES.maxMessagesPerDay) return null;
 
   const greeting = getSmartGreeting('en');
-  const template = VACANCY_CONFIRMATION_TEMPLATES.initialPrompt.en(
+  const appUrl = process.env.APP_URL || 'https://pataspace.freebuff.app';
+  const quickVerifyUrl = `${appUrl}/quick-verify?propertyId=${encodeURIComponent(input.propertyId)}&name=${encodeURIComponent(input.propertyName)}`;
+  const template = VACANCY_CONFIRMATION_TEMPLATES.appFirstPrompt.en(
     input.propertyName,
-    input.unitIdentifiers,
+    input.unitIdentifiers.length,
+    quickVerifyUrl,
   );
   const messageText = `${greeting} ${input.propertyManagerName || ''}\n\n${template}`.trim();
 
@@ -293,9 +296,12 @@ export async function checkAndEscalateToOwner(): Promise<number> {
       if (daysSince >= ESCALATION_RULES.ownerNotificationAfterDays && !isQuietHours()) {
         // Escalate to owner
         const greeting = getSmartGreeting('en');
+        const appUrl = process.env.APP_URL || 'https://pataspace.freebuff.app';
+        const quickVerifyUrl = `${appUrl}/quick-verify?propertyId=${encodeURIComponent(conversation.propertyId)}&name=${encodeURIComponent(conversation.propertyName)}`;
         const template = VACANCY_CONFIRMATION_TEMPLATES.ownerEscalation.en(
           conversation.propertyName,
           daysSince,
+          quickVerifyUrl,
         );
         const messageText = `${greeting}\n\n${template}`;
 
