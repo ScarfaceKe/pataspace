@@ -136,7 +136,6 @@ interface DotState {
 export function KenyaMapAnimation() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const perf = useCanvasPerformance();
-  const scrollRef = useRef(0);
   const [scrollY, setScrollY] = useState(0);
   const stateRef = useRef<{
     dots: DotState[];
@@ -144,14 +143,17 @@ export function KenyaMapAnimation() {
     lastTime: number;
   } | null>(null);
 
-  // Track scroll for parallax
+  // Track scroll for parallax — maps scrollY to [0, 1] progress
   useEffect(() => {
     let ticking = false;
     function onScroll() {
       if (!ticking) {
         requestAnimationFrame(() => {
-          scrollRef.current = window.scrollY;
-          setScrollY(window.scrollY);
+          const sy = window.scrollY;
+          // Normalize: 0 = top of page, 1 = one full viewport scrolled
+          const heroH = window.innerHeight || 800;
+          const progress = Math.min(sy / heroH, 1);
+          setScrollY(progress);
           ticking = false;
         });
         ticking = true;
@@ -232,9 +234,7 @@ export function KenyaMapAnimation() {
       const mapW = w - pad * 2;
       const mapH = h - pad * 2;
 
-      // --- SCROLL PARALLAX ---
-      // Map shifts gently as user scrolls (max 60px shift)
-      const scrollOffset = Math.min(scrollRef.current * 0.08, 60);
+      // Note: scroll parallax is handled by CSS transforms on the canvas element
 
       // --- 3D DEPTH: Multiple outline layers ---
       // Layer 1: Deepest shadow (dark, offset)
@@ -304,11 +304,8 @@ export function KenyaMapAnimation() {
         const ringRadius = dot.baseRadius * 2 + ringProgress * dot.baseRadius * 4;
         const ringAlpha = ringProgress * 0.5;
 
-        // Parallax: dots shift with scroll (less than the map itself)
-        const parallaxY = scrollOffset * (0.3 + city.y * 0.4);
-
         const x = pad + city.x * mapW;
-        const y = pad + city.y * mapH - parallaxY;
+        const y = pad + city.y * mapH;
 
         drawCityDot(ctx, x, y, dot.baseRadius, alpha, ringAlpha, ringRadius);
       }
@@ -347,9 +344,33 @@ export function KenyaMapAnimation() {
     };
   }, []);
 
-  // 3D perspective tilt based on scroll
-  const tiltX = Math.min(scrollY * 0.015, 6);
-  const tiltScale = 1 + Math.min(scrollY * 0.0001, 0.04);
+  // --- SCROLL-DRIVEN 3D PARALLAX ---
+  // scrollY is normalized 0→1 (one full viewport of scroll)
+  //
+  // DOWN scroll: map moves right→left, gets bigger, tilts in 3D
+  // UP scroll: map moves left→right, gets smaller, tilt reduces
+  // STOPPED: map holds, dots keep beeping
+  //
+  // Timeline:
+  //   0.00  → map at rest: centered-right, normal size, no tilt
+  //   0.10  → movement begins
+  //   0.50  → map has moved ~halfway left, slightly bigger
+  //   0.90  → map near far-left, magnified, strongly tilted
+  //   1.00  → map exits scene (opacity → 0)
+
+  const p = scrollY; // 0 to 1
+
+  // Horizontal: center-right (20%) → far-left (-60%)
+  const tx = 20 - p * 80; // 20% → -60%
+
+  // Scale: 1.0 → 1.35 (magnifies as it moves left)
+  const sc = 1 + p * 0.35;
+
+  // 3D tilt: 0° → 14° (elevated perspective)
+  const rotX = p * 14;
+
+  // Opacity: hold at 0.8 until p=0.8, then fade to 0
+  const opacity = p > 0.8 ? Math.max(0, 0.8 * (1 - (p - 0.8) / 0.2)) : 0.8;
 
   return (
     <canvas
@@ -361,11 +382,11 @@ export function KenyaMapAnimation() {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        opacity: 0.8,
-        transform: `perspective(1200px) rotateX(${tiltX}deg) scale(${tiltScale})`,
-        transformOrigin: 'center 40%',
-        transition: 'transform 0.1s linear',
-        willChange: 'transform',
+        opacity,
+        transform: `perspective(1200px) rotateX(${rotX}deg) translateX(${tx}%) scale(${sc})`,
+        transformOrigin: 'center center',
+        transition: 'none',
+        willChange: 'transform, opacity',
       }}
     />
   );
