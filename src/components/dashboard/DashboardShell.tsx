@@ -2,6 +2,7 @@ import type { AuthProfileFoundation } from '@/domain/auth';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { canRegisterProperties } from '@/domain/property-registration';
 import { ListingWhatsAppSupport } from '@/components/support/ListingWhatsAppSupport';
+import { WhatsAppVacancySection } from '@/components/dashboard/WhatsAppVacancySection';
 
 export function DashboardShell({ profile, title }: { profile: AuthProfileFoundation; title: string }) {
   return (
@@ -31,6 +32,7 @@ export function DashboardShell({ profile, title }: { profile: AuthProfileFoundat
           </div>
         </dl>
         {canRegisterProperties(profile.role) ? <ListingWhatsAppSupport context="dashboard" /> : null}
+        {canRegisterProperties(profile.role) ? <WhatsAppVacancySection userId={profile.userId} /> : null}
         <div className="dashboard-actions">
           {profile.role === 'customer' ? (
             <>
