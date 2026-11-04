@@ -2,8 +2,8 @@ import dynamic from 'next/dynamic';
 import { AtlasHeader } from '@/components/landing/AtlasHeader';
 import { AtlasInterview } from '@/components/landing/AtlasInterview';
 import { AtlasReviews } from '@/components/landing/AtlasReviews';
-import { KenyaCinema } from '@/components/landing/KenyaCinema';
-import { ArrowRight, BrandMark, CategoryGlyph, KenyaContours } from '@/components/landing/glyphs';
+import { HeroFilm } from '@/components/landing/HeroFilm';
+import { ArrowRight, BrandMark, CategoryGlyph } from '@/components/landing/glyphs';
 import { EntryPointCards } from '@/components/EntryPointCards';
 import { FEATURED_KENYA_LOCATIONS } from '@/domain/locations';
 
@@ -101,10 +101,7 @@ export default function Home() {
         <section className="ps-cinema" aria-labelledby="hero-title">
           <div className="ps-cinema__pin">
             <div className="ps-cinema__art">
-              <KenyaCinema />
-              <div className="ps-cinema__contours" aria-hidden="true">
-                <KenyaContours className="ps-cinema__contourSvg" />
-              </div>
+              <HeroFilm />
               <div className="ps-cinema__scrim" aria-hidden="true" />
               <div className="ps-cinema__grain" aria-hidden="true" />
             </div>
@@ -155,24 +152,24 @@ export default function Home() {
                 </div>
               </div>
 
-              <aside className="ps-cinema__readout" aria-label="About the Kenya terrain study">
+              <aside className="ps-cinema__readout" aria-label="About the Kenya city film">
                 <p className="ps-cinema__readoutMeta">
-                  <span>Terrain study · 001</span>
+                  <span>City film · 001</span>
                   <span>Silent</span>
                 </p>
-                <p className="ps-cinema__readoutLead">A living atlas of the ground we work from.</p>
+                <p className="ps-cinema__readoutLead">A living study of the city we work from.</p>
                 <dl className="ps-cinema__readoutRows">
                   <div>
-                    <dt>Elevation</dt>
-                    <dd>0–5,199 m</dd>
+                    <dt>Frame</dt>
+                    <dd>Scroll-controlled</dd>
                   </div>
                   <div>
-                    <dt>Verified nodes</dt>
-                    <dd>12 cities</dd>
+                    <dt>Sound</dt>
+                    <dd>Silent</dd>
                   </div>
                   <div>
-                    <dt>Boundary</dt>
-                    <dd>Geographic</dd>
+                    <dt>Focus</dt>
+                    <dd>Nairobi</dd>
                   </div>
                 </dl>
                 <div className="ps-cinema__cities" aria-hidden="true">
@@ -185,8 +182,8 @@ export default function Home() {
                   <i />
                 </div>
                 <p className="ps-cinema__readoutFoot">
-                  <span className="ps-cinema__scrollHint">Scroll to raise the city. Reverse to return to the map.</span>
-                  <span className="ps-cinema__staticHint">Static terrain plate. Motion is reduced on this device.</span>
+                  <span className="ps-cinema__scrollHint">Scroll to move through the city. Reverse to rewind.</span>
+                  <span className="ps-cinema__staticHint">City film. Motion is reduced on this device.</span>
                 </p>
               </aside>
             </div>
@@ -195,7 +192,7 @@ export default function Home() {
               <span>Verified before visible</span>
               <span>Vacancy checked daily</span>
               <span>Built in Nairobi</span>
-              <span>Scroll to build the city ↓</span>
+              <span>Scroll to enter the city ↓</span>
             </div>
           </div>
         </section>
