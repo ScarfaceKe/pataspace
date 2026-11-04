@@ -62,3 +62,5 @@ data/executive-intelligence.json.tmp
 data/kenya-geography.json
 data/kenya-geography.json.tmp
 isolate/
+test-results/
+playwright-report/
