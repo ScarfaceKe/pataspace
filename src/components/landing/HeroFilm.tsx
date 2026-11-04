@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-const FILM_SRC = '/hero/pataspace-city.mp4';
+const FILM_SRC = '/api/hero-film?v=1';
 const POSTER_SRC = '/hero/pataspace-city-poster.jpg';
 
 /** Skip the dark opening so the city is present from the first frame. */

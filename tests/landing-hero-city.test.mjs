@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 const page = readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8');
 const heroFilm = readFileSync(new URL('../src/components/landing/HeroFilm.tsx', import.meta.url), 'utf8');
+const filmRoute = readFileSync(new URL('../app/api/hero-film/route.ts', import.meta.url), 'utf8');
+const filmModule = readFileSync(new URL('../src/server/hero-film.ts', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../app/atlas.css', import.meta.url), 'utf8');
 const featuredRoute = readFileSync(new URL('../app/api/landing/featured/route.ts', import.meta.url), 'utf8');
 const reviewsRoute = readFileSync(new URL('../app/api/landing/reviews/route.ts', import.meta.url), 'utf8');
@@ -20,8 +22,9 @@ assert.ok(
   heroFilm.includes('<video') &&
     heroFilm.includes('muted') &&
     heroFilm.includes('playsInline') &&
-    heroFilm.includes('preload="auto"'),
-  'Hero film must be a silent, inline, preloaded video'
+    heroFilm.includes('preload="auto"') &&
+    heroFilm.includes("const FILM_SRC = '/api/hero-film?v=1'"),
+  'Hero film must be a silent, inline, preloaded video served by the film route'
 );
 assert.ok(
   !heroFilm.includes('autoPlay') && !heroFilm.includes('loop'),
@@ -46,7 +49,9 @@ assert.ok(
   'Reduced motion must hold a composed city frame'
 );
 
-const filmAsset = readFileSync(new URL('../public/hero/pataspace-city.mp4', import.meta.url));
+const encodedFilm = filmModule.match(/HERO_FILM_BASE64\s*=\s*`([\s\S]*?)`/)?.[1]?.replace(/\s+/g, '');
+assert.ok(encodedFilm, 'The hero film must have an ASCII-safe base64 payload');
+const filmAsset = Buffer.from(encodedFilm, 'base64');
 const posterAsset = statSync(new URL('../public/hero/pataspace-city-poster.jpg', import.meta.url));
 assert.ok(filmAsset.length > 0, 'The city film asset must be present');
 assert.ok(filmAsset.length < 2_000_000, 'The city film must stay mobile-friendly');
@@ -54,6 +59,12 @@ assert.ok(posterAsset.size < 250_000, 'The city film poster must stay lightweigh
 assert.ok(filmAsset.includes(Buffer.from('vide')), 'The city film must carry a video track');
 assert.ok(!filmAsset.includes(Buffer.from('soun')), 'The city film must have no audio track');
 assert.ok(posterAsset.size > 0, 'The city film poster must be present');
+assert.ok(
+  filmRoute.includes("'Content-Type': 'video/mp4'") &&
+    filmRoute.includes("'Accept-Ranges': 'bytes'") &&
+    filmRoute.includes("bytes ${range.start}-${range.end}/${FILM.byteLength}"),
+  'The city film route must serve video with byte ranges for seeking'
+);
 
 assert.ok(
   css.includes('.ps-film__video') &&
