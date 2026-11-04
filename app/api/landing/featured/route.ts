@@ -28,7 +28,10 @@ const CATEGORY_META: Record<PropertyCategoryId, { name: string; icon: string }> 
   'mixed-use-building': { name: 'Mixed-Use Building', icon: '🏙️' },
 };
 
-function resolveUnlockPrice(property: { category: PropertyCategoryId; id: string }, unitIdentifier?: string): number {
+function resolveUnlockPrice(
+  property: { category: PropertyCategoryId; id: string },
+  unitIdentifier?: string
+): number {
   const target: UnlockTarget = {
     propertyId: property.id,
     unitIdentifier: unitIdentifier || 'main',
@@ -42,48 +45,66 @@ function resolveUnlockPrice(property: { category: PropertyCategoryId; id: string
   }
 }
 
-function getDefaultPricingCategory(category: PropertyCategoryId): ResidentialUnlockCategory | ShopUnlockCategory | OfficeUnlockCategory | EventHallUnlockCategory {
+function getDefaultPricingCategory(
+  category: PropertyCategoryId
+): ResidentialUnlockCategory | ShopUnlockCategory | OfficeUnlockCategory | EventHallUnlockCategory {
   switch (category) {
-    case 'houses': return 'one-bedroom';
-    case 'shops': return 'medium-shop';
-    case 'offices': return 'small-office';
-    case 'event-halls': return 'medium-event-hall';
-    case 'mixed-use-building': return 'one-bedroom';
+    case 'houses':
+      return 'one-bedroom';
+    case 'shops':
+      return 'medium-shop';
+    case 'offices':
+      return 'small-office';
+    case 'event-halls':
+      return 'medium-event-hall';
+    case 'mixed-use-building':
+      return 'one-bedroom';
   }
 }
 
-export async function GET() {
+async function getFeaturedListings(): Promise<FeaturedListing[]> {
   const { properties } = await readPropertyStore();
-
+  // The landing stamps every featured card "Verified". Pending records must
+  // never reach this surface until a person has completed verification.
   const verified = properties.filter(
-    (p) => p.status === 'active' && (p.verificationStatus === 'verified' || p.verificationStatus === 'pending-verification')
+    (property) => property.status === 'active' && property.verificationStatus === 'verified'
   );
 
   const categories: PropertyCategoryId[] = ['houses', 'shops', 'offices', 'event-halls'];
   const featured: FeaturedListing[] = [];
 
-  for (const cat of categories) {
-    const match = verified.find((p) => p.category === cat);
-    if (match) {
-      const meta = CATEGORY_META[cat];
-      const locationStr = [match.location.estateOrAreaOrNeighbourhood, match.location.townOrCity, match.location.county]
-        .filter(Boolean)
-        .join(', ');
-      featured.push({
-        id: match.id,
-        category: cat,
-        categoryName: meta.name,
-        icon: meta.icon,
-        name: match.description?.slice(0, 80) || `${meta.name} in ${locationStr}`,
-        location: locationStr || 'Kenya',
-        description: match.description || '',
-        unitIdentifier: match.vacancy?.unitIdentifiers?.[0],
-        unlockPrice: resolveUnlockPrice(match, match.vacancy?.unitIdentifiers?.[0]),
-        currency: 'KES',
-        verifiedAt: match.submittedAt,
-      });
-    }
+  for (const category of categories) {
+    const match = verified.find((property) => property.category === category);
+    if (!match) continue;
+
+    const meta = CATEGORY_META[category];
+    const location = [match.location.estateOrAreaOrNeighbourhood, match.location.townOrCity, match.location.county]
+      .filter(Boolean)
+      .join(', ');
+    featured.push({
+      id: match.id,
+      category,
+      categoryName: meta.name,
+      icon: meta.icon,
+      name: match.description?.slice(0, 80) || `${meta.name} in ${location}`,
+      location: location || 'Kenya',
+      description: match.description || '',
+      unitIdentifier: match.vacancy?.unitIdentifiers?.[0],
+      unlockPrice: resolveUnlockPrice(match, match.vacancy?.unitIdentifiers?.[0]),
+      currency: 'KES',
+      verifiedAt: match.submittedAt,
+    });
   }
 
-  return NextResponse.json({ ok: true, featured });
+  return featured;
+}
+
+export async function GET() {
+  try {
+    return NextResponse.json({ ok: true, featured: await getFeaturedListings() });
+  } catch {
+    // The public landing must remain usable when the database is unavailable.
+    // The client already renders an honest empty state for an empty board.
+    return NextResponse.json({ ok: true, featured: [] });
+  }
 }

@@ -11,21 +11,29 @@ interface LandingReview {
   createdAt: string;
 }
 
-export async function GET() {
+async function getLandingReviews(): Promise<LandingReview[]> {
   const { reviews } = await readReviewStore();
 
   const published = reviews
-    .filter((r) => r.status === 'published')
+    .filter((review) => review.status === 'published')
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 10);
 
-  const landingReviews: LandingReview[] = published.map((review) => ({
+  return published.map((review) => ({
     id: review.id,
     rating: review.rating,
     writtenReview: review.writtenReview,
     propertyCategory: review.propertyCategory,
     createdAt: review.createdAt,
   }));
+}
 
-  return NextResponse.json({ ok: true, reviews: landingReviews });
+export async function GET() {
+  try {
+    return NextResponse.json({ ok: true, reviews: await getLandingReviews() });
+  } catch {
+    // Reviews are a trust signal, never a gate. Keep the landing available and
+    // let the client show its verified-empty state while storage is down.
+    return NextResponse.json({ ok: true, reviews: [] });
+  }
 }
