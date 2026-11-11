@@ -5,8 +5,8 @@ import { useEffect, useRef } from 'react';
 const FILM_SRC = '/api/hero-film?v=1';
 const POSTER_SRC = '/hero/pataspace-city-poster.jpg';
 
-/** Skip the dark opening so the city is present from the first frame. */
-const FILM_START = 3.5;
+/** The hero plays the supplied film from its first frame to its last. */
+const FILM_START = 0;
 
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
@@ -66,6 +66,15 @@ export function HeroFilm() {
       }
       const delta = lastTime ? Math.min(0.05, (time - lastTime) / 1000) : 0.016;
       lastTime = time;
+      // Keep the first and last frames exact at the hero boundaries. The
+      // damping is for the journey; it must not leave the next section
+      // visible while the film is still catching up to its final frame.
+      if (target <= 0.001 || target >= 0.999) {
+        current = target;
+        updateProgress(current);
+        raf = 0;
+        return;
+      }
       const damping = 1 - Math.exp(-delta * 8.5);
       current += (target - current) * damping;
 
@@ -92,6 +101,8 @@ export function HeroFilm() {
       const pinRect = pin.getBoundingClientRect();
       const travel = Math.max(1, section.offsetHeight - pin.offsetHeight);
       target = clamp01((pinRect.top - sectionRect.top) / travel);
+      const act = target < 0.3 ? '1' : target < 0.62 ? '2' : '3';
+      if (section.dataset.act !== act) section.dataset.act = act;
       wake();
     };
 
@@ -124,7 +135,10 @@ export function HeroFilm() {
       // currentTime seeks work on iOS, then immediately returns to a still.
       void video
         .play()
-        .then(() => video.pause())
+        .then(() => {
+          video.pause();
+          updateProgress(current);
+        })
         .catch(() => undefined);
       if (!reducedMotion) readScroll();
     };

@@ -13,6 +13,15 @@ const featuredCard = readFileSync(new URL('../src/components/landing/AtlasFeatur
 assert.ok(page.includes('HeroFilm') && page.includes('ps-cinema__pin'), 'Landing must render the pinned hero film');
 assert.ok(!page.includes('KenyaCinema'), 'The flat Kenya fallback must not be the hero artwork');
 assert.ok(!page.includes('<audio'), 'The hero must never attach an audio element');
+assert.equal(
+  (page.match(/ps-cinema__chapter ps-cinema__chapter--/g) ?? []).length,
+  3,
+  'The hero must contain three fly-through acts'
+);
+assert.ok(
+  page.includes('data-act="1"') && page.includes('ps-cinema__route') && page.includes('Flight path'),
+  'The hero must expose the initial act and the film flight path'
+);
 assert.ok(
   page.includes('Scroll to move through the city. Reverse to rewind.'),
   'Hero must explain the scroll-controlled film'
@@ -33,6 +42,10 @@ assert.ok(
 assert.ok(
   heroFilm.includes("window.addEventListener('scroll', readScroll, { passive: true })"),
   'The city film must listen to real scroll'
+);
+assert.ok(
+  heroFilm.includes('const FILM_START = 0;'),
+  'The hero must scrub from the first frame of the film'
 );
 assert.ok(
   heroFilm.includes('video.currentTime = time') &&

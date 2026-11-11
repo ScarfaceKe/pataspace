@@ -98,7 +98,7 @@ export default function Home() {
 
       <main className="ps-main" id="main">
         {/* ============ CINEMATIC HERO ============ */}
-        <section className="ps-cinema" aria-labelledby="hero-title">
+        <section className="ps-cinema" data-act="1" aria-labelledby="hero-title">
           <div className="ps-cinema__pin">
             <div className="ps-cinema__art">
               <HeroFilm />
@@ -110,80 +110,162 @@ export default function Home() {
               01° 17′ S · 36° 49′ E — Nairobi, Kenya
             </p>
 
+            <div className="ps-cinema__actNo" aria-hidden="true">
+              <span>01</span>
+              <span>02</span>
+              <span>03</span>
+            </div>
+
             <div className="ps-cinema__inner">
               <div className="ps-cinema__copy">
-                <div className="ps-hero__copy">
-                  <p className="ps-kicker">
-                    <span>The Kenya rental atlas</span>
-                    <span>No. 001</span>
-                  </p>
+                <div className="ps-cinema__chapters">
+                  <article className="ps-cinema__chapter ps-cinema__chapter--1">
+                    <div className="ps-hero__copy">
+                      <p className="ps-kicker">
+                        <span>The Kenya rental atlas</span>
+                        <span>No. 001</span>
+                      </p>
 
-                  <h1 className="ps-hero__title" id="hero-title">
-                    Pata
-                    <br />
-                    <em>space.</em>
-                  </h1>
+                      <h1 className="ps-hero__title" id="hero-title">
+                        Pata
+                        <br />
+                        <em>space.</em>
+                      </h1>
 
-                  <p className="ps-hero__gloss">
-                    <b>pata</b> <i>Swahili, v.</i> — to find; to get.
-                  </p>
+                      <p className="ps-hero__gloss">
+                        <b>pata</b> <i>Swahili, v.</i> — to find; to get.
+                      </p>
 
-                  <p className="ps-hero__lede">
-                    PataSpace helps Kenyans quickly find houses, shops, offices, and event halls — through a few clear
-                    questions, verified listings, and vacancies that are actually confirmed.
-                  </p>
+                      <p className="ps-hero__lede">
+                        PataSpace helps Kenyans quickly find houses, shops, offices, and event halls — through a few
+                        clear questions, verified listings, and vacancies that are actually confirmed.
+                      </p>
 
-                  <div className="ps-hero__actions">
-                    <a className="ps-btn ps-btn--ochre" href="#entry">
-                      Begin guided search
-                      <ArrowRight />
-                    </a>
-                    <a className="ps-btn ps-btn--ghost" href="/properties/register">
-                      List your property
-                    </a>
-                  </div>
+                      <div className="ps-hero__actions">
+                        <a className="ps-btn ps-btn--ochre" href="#entry">
+                          Begin guided search
+                          <ArrowRight />
+                        </a>
+                        <a className="ps-btn ps-btn--ghost" href="/properties/register">
+                          List your property
+                        </a>
+                      </div>
 
-                  <div className="hero-trust-chips ps-hero__chips" aria-label="PataSpace promises">
-                    <span>Kenya only</span>
-                    <span>Verified-first</span>
-                    <span>M-Pesa ready</span>
-                    <span>No account to browse</span>
-                  </div>
+                      <div className="hero-trust-chips ps-hero__chips" aria-label="PataSpace promises">
+                        <span>Kenya only</span>
+                        <span>Verified-first</span>
+                        <span>M-Pesa ready</span>
+                        <span>No account to browse</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article className="ps-cinema__chapter ps-cinema__chapter--2">
+                    <div className="ps-hero__copy">
+                      <p className="ps-kicker">
+                        <span>02 / The standard</span>
+                        <span>Human-checked</span>
+                      </p>
+                      <h2 className="ps-hero__title ps-hero__title--chapter">
+                        Verified
+                        <br />
+                        <em>before visible.</em>
+                      </h2>
+                      <p className="ps-hero__chapterLede">
+                        A person visits every property. Photos, address, rent, and the person behind the listing are
+                        checked before you ever see it. If a space is gone, it leaves the atlas.
+                      </p>
+                      <ul className="ps-cinema__claims">
+                        <li>
+                          <b>47</b>
+                          <span>counties in the atlas</span>
+                        </li>
+                        <li>
+                          <b>24h</b>
+                          <span>vacancy confirmation cycle</span>
+                        </li>
+                        <li>
+                          <b>00</b>
+                          <span>fake listings tolerated</span>
+                        </li>
+                      </ul>
+                      <div className="ps-hero__actions">
+                        <a className="ps-btn ps-btn--ochre" href="#standard">
+                          See the standard
+                          <ArrowRight />
+                        </a>
+                        <a className="ps-btn ps-btn--ghost" href="#how">
+                          How it works
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article className="ps-cinema__chapter ps-cinema__chapter--3">
+                    <div className="ps-hero__copy">
+                      <p className="ps-kicker">
+                        <span>03 / The opening</span>
+                        <span>Ready when you are</span>
+                      </p>
+                      <h2 className="ps-hero__title ps-hero__title--chapter">
+                        Find the one.
+                        <br />
+                        <em>Then move.</em>
+                      </h2>
+                      <p className="ps-hero__chapterLede">
+                        A few clear questions. A short list of spaces that actually fit. Direct contact when you&apos;re
+                        ready — no broker games, no dead ends.
+                      </p>
+                      <div className="ps-hero__actions">
+                        <a className="ps-btn ps-btn--ochre" href="#entry">
+                          Begin guided search
+                          <ArrowRight />
+                        </a>
+                        <a className="ps-btn ps-btn--ghost" href="/properties/register">
+                          List your property
+                        </a>
+                      </div>
+                      <p className="ps-cinema__actNote">Free to browse · Sign in only when you&apos;re ready to unlock.</p>
+                    </div>
+                  </article>
                 </div>
               </div>
 
-              <aside className="ps-cinema__readout" aria-label="About the Kenya city film">
+              <aside className="ps-cinema__readout ps-cinema__flight" aria-label="Film flight path">
                 <p className="ps-cinema__readoutMeta">
-                  <span>City film · 001</span>
+                  <span>Flight path · 001</span>
                   <span>Silent</span>
                 </p>
-                <p className="ps-cinema__readoutLead">A living study of the city we work from.</p>
-                <dl className="ps-cinema__readoutRows">
-                  <div>
-                    <dt>Frame</dt>
-                    <dd>Scroll-controlled</dd>
-                  </div>
-                  <div>
-                    <dt>Sound</dt>
-                    <dd>Silent</dd>
-                  </div>
-                  <div>
-                    <dt>Focus</dt>
-                    <dd>Nairobi</dd>
-                  </div>
-                </dl>
-                <div className="ps-cinema__cities" aria-hidden="true">
-                  <span>Nairobi</span>
-                  <span>Mombasa</span>
-                  <span>Kisumu</span>
-                  <span>Nakuru</span>
-                </div>
+                <ol className="ps-cinema__route">
+                  <li>
+                    <span className="ps-cinema__routeNo">01</span>
+                    <span className="ps-cinema__routeCopy">
+                      <b>The city</b>
+                      <small>Nairobi, in motion</small>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="ps-cinema__routeNo">02</span>
+                    <span className="ps-cinema__routeCopy">
+                      <b>The standard</b>
+                      <small>Checked before it&apos;s shown</small>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="ps-cinema__routeNo">03</span>
+                    <span className="ps-cinema__routeCopy">
+                      <b>The opening</b>
+                      <small>Find it, then move</small>
+                    </span>
+                  </li>
+                </ol>
                 <div className="ps-cinema__meter" aria-hidden="true">
                   <i />
                 </div>
                 <p className="ps-cinema__readoutFoot">
                   <span className="ps-cinema__scrollHint">Scroll to move through the city. Reverse to rewind.</span>
                   <span className="ps-cinema__staticHint">City film. Motion is reduced on this device.</span>
+                  <span className="ps-cinema__timecode">03.5 — 10.0s</span>
                 </p>
               </aside>
             </div>
@@ -192,7 +274,7 @@ export default function Home() {
               <span>Verified before visible</span>
               <span>Vacancy checked daily</span>
               <span>Built in Nairobi</span>
-              <span>Scroll to enter the city ↓</span>
+              <span>Scroll to move through the city. Reverse to rewind.</span>
             </div>
           </div>
         </section>
