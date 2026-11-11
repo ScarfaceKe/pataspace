@@ -3373,24 +3373,35 @@
   inset: -2%;
   z-index: 0;
   overflow: hidden;
-  background: #04110c;
+  background: #04110c url("/hero/pataspace-city-poster.jpg") center / cover no-repeat;
 }
 
-.ps-film__video {
+.ps-film__video,
+.ps-film__canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 54% 45%;
-  filter: saturate(0.9) contrast(1.06) brightness(0.82) sepia(0.05);
+  filter: saturate(1.02) contrast(1.04) brightness(1.02) sepia(0.02);
   transform: translate3d(0, calc(var(--cinema-p, 0) * -1.4%), 0) scale(1.04);
   transform-origin: 50% 55%;
   will-change: transform;
 }
 
+.ps-film__video {
+  z-index: 0;
+}
+
+.ps-film__canvas {
+  z-index: 1;
+}
+
 .ps-film__grade {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   background:
     linear-gradient(112deg, rgba(227, 163, 59, 0.1) 0%, transparent 42%, rgba(4, 17, 12, 0.28) 100%),
@@ -3418,9 +3429,67 @@
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(4, 17, 12, 0.97) 0%, rgba(4, 17, 12, 0.88) 22%, rgba(4, 17, 12, 0.46) 45%, rgba(4, 17, 12, 0.02) 68%, rgba(4, 17, 12, 0.18) 100%),
-    linear-gradient(0deg, rgba(4, 17, 12, 0.94) 0%, rgba(4, 17, 12, 0.3) 26%, transparent 52%),
-    radial-gradient(ellipse at 62% 45%, transparent 18%, rgba(4, 17, 12, 0.36) 78%);
+    linear-gradient(90deg, rgba(4, 17, 12, 0.94) 0%, rgba(4, 17, 12, 0.78) 23%, rgba(4, 17, 12, 0.28) 46%, rgba(4, 17, 12, 0.02) 68%, rgba(4, 17, 12, 0.12) 100%),
+    linear-gradient(0deg, rgba(4, 17, 12, 0.9) 0%, rgba(4, 17, 12, 0.16) 26%, transparent 54%),
+    radial-gradient(ellipse at 62% 45%, transparent 25%, rgba(4, 17, 12, 0.24) 80%);
+}
+
+.ps-cinema__filmCue {
+  position: absolute;
+  top: clamp(18px, 2.6vh, 28px);
+  left: 50%;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(243, 236, 220, 0.2);
+  background: rgba(4, 17, 12, 0.42);
+  font-family: var(--ps-mono);
+  font-size: 0.53rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(243, 236, 220, 0.78);
+  transform: translateX(-50%);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ps-cinema__filmCueDot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ps-ochre);
+  box-shadow: 0 0 0 4px rgba(227, 163, 59, 0.14);
+  animation: ps-film-pulse 2.4s ease-in-out infinite;
+}
+
+.ps-cinema__filmCueAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 9px;
+  border-left: 1px solid rgba(243, 236, 220, 0.2);
+  color: var(--ps-ochre-soft);
+}
+
+.ps-cinema__filmCueArrow {
+  display: inline-block;
+  animation: ps-film-nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes ps-film-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes ps-film-nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
 }
 
 .ps-cinema__grain {
@@ -3456,6 +3525,15 @@
 
 .ps-cinema__copy .ps-hero__copy {
   max-width: 100%;
+}
+
+.ps-cinema__chapter .ps-hero__title,
+.ps-cinema__chapter .ps-kicker,
+.ps-cinema__chapter .ps-hero__lede,
+.ps-cinema__chapter .ps-hero__chapterLede,
+.ps-cinema__chapter .ps-hero__gloss,
+.ps-cinema__chapter .ps-cinema__actNote {
+  text-shadow: 0 2px 22px rgba(2, 10, 8, 0.55);
 }
 
 .ps-cinema__coord {
@@ -3906,14 +3984,33 @@
     display: none;
   }
 
-  .ps-cinema__scrim {
-    background:
-      linear-gradient(0deg, rgba(4, 17, 12, 0.98) 0%, rgba(4, 17, 12, 0.86) 34%, rgba(4, 17, 12, 0.22) 73%, rgba(4, 17, 12, 0.46) 100%),
-      radial-gradient(ellipse at 50% 36%, transparent 20%, rgba(4, 17, 12, 0.28) 86%);
+  .ps-cinema__inner {
+    isolation: isolate;
   }
 
-  .ps-film__video {
+  .ps-cinema__inner::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    height: 64%;
+    background: linear-gradient(0deg, rgba(4, 17, 12, 0.58) 0%, rgba(4, 17, 12, 0.28) 52%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .ps-cinema__scrim {
+    background:
+      linear-gradient(0deg, rgba(4, 17, 12, 0.95) 0%, rgba(4, 17, 12, 0.72) 30%, rgba(4, 17, 12, 0.08) 59%, rgba(4, 17, 12, 0.18) 100%),
+      radial-gradient(ellipse at 50% 36%, transparent 22%, rgba(4, 17, 12, 0.18) 86%);
+  }
+
+  .ps-film__video,
+  .ps-film__canvas {
     object-position: 50% 36%;
+    transform: translate3d(0, calc(var(--cinema-p, 0) * -1.4% - 5%), 0) scale(1.08);
+    filter: saturate(0.98) contrast(1.05) brightness(0.96) sepia(0.03);
   }
 
   .ps-kenyaFallback__svg {
@@ -3945,6 +4042,18 @@
 
   .ps-cinema__inner {
     padding: 70px 18px 92px;
+  }
+
+  .ps-cinema__filmCue {
+    top: 14px;
+    gap: 7px;
+    padding: 6px 9px;
+    font-size: 0.47rem;
+    letter-spacing: 0.1em;
+  }
+
+  .ps-cinema__filmCueAction {
+    padding-left: 7px;
   }
 
   .ps-hero__title {
@@ -3996,9 +4105,10 @@
     font-size: 0.48rem;
   }
 
-  .ps-film__video {
+  .ps-film__video,
+  .ps-film__canvas {
     object-position: 50% 32%;
-    filter: saturate(0.86) contrast(1.08) brightness(0.78) sepia(0.05);
+    filter: saturate(0.98) contrast(1.05) brightness(0.93) sepia(0.03);
   }
 
   .ps-kenyaFallback__svg {
@@ -5028,6 +5138,16 @@ body:has(.property-registration-page .match-wizard) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ps-cinema__filmCueAction,
+  .ps-cinema__filmCueArrow {
+    display: none;
+  }
+
+  .ps-cinema__filmCueDot {
+    animation: none;
+    opacity: 0.8;
+  }
+
   .ps-cinema__chapters {
     display: block;
   }
@@ -5051,5 +5171,82 @@ body:has(.property-registration-page .match-wizard) {
   .ps-cinema__actNo,
   .ps-cinema__flight {
     display: none;
+  }
+}
+
+/* Short landscape screens need a compact pinned hero too; without this the
+   film track disappears and the scroll promise in the film cue is false. */
+@media screen and (max-height: 620px) and (orientation: landscape) and (prefers-reduced-motion: no-preference) {
+  .ps-cinema {
+    height: 180svh;
+  }
+
+  .ps-cinema__pin {
+    position: sticky;
+    top: var(--ps-header-h);
+    height: calc(100svh - var(--ps-header-h));
+  }
+
+  .ps-cinema__inner {
+    height: 100%;
+    min-height: 0;
+    padding: 16px 24px 54px;
+    align-items: end;
+  }
+
+  .ps-cinema__chapter .ps-kicker {
+    margin-bottom: 10px;
+  }
+
+  .ps-cinema__chapter .ps-hero__title {
+    font-size: clamp(2.6rem, 6vw, 4rem);
+  }
+
+  .ps-cinema__chapter .ps-hero__lede,
+  .ps-cinema__chapter .ps-hero__chapterLede {
+    margin-top: 10px;
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .ps-cinema__claims,
+  .ps-cinema__actNote,
+  .ps-cinema__foot {
+    display: none;
+  }
+
+  .ps-cinema__chapter .ps-hero__actions {
+    margin-top: 12px;
+  }
+}
+
+@media screen and (max-height: 420px) and (orientation: landscape) and (prefers-reduced-motion: no-preference) {
+  .ps-cinema__chapter .ps-hero__lede,
+  .ps-cinema__chapter .ps-hero__chapterLede {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 700px) and (max-height: 420px) and (orientation: landscape) and (prefers-reduced-motion: no-preference) {
+  .ps-cinema__chapter .ps-kicker {
+    display: none;
+  }
+
+  .ps-cinema__chapter .ps-hero__title {
+    font-size: clamp(1.9rem, 7vw, 2.6rem);
+    line-height: 0.84;
+  }
+
+  .ps-cinema__chapter .ps-hero__actions {
+    margin-top: 8px;
+  }
+
+  .ps-cinema__chapter .ps-hero__actions .ps-btn {
+    min-height: 44px;
+    font-size: 0.62rem;
+  }
+
+  .ps-cinema__inner {
+    padding-bottom: 18px;
   }
 }

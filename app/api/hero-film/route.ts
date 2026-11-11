@@ -1,7 +1,7 @@
 import { HERO_FILM_BASE64 } from '@/server/hero-film';
 
 const FILM = Uint8Array.from(Buffer.from(HERO_FILM_BASE64, 'base64'));
-const ETAG = '"hero-film-v1"';
+const ETAG = '"hero-film-v2"';
 
 const BASE_HEADERS = {
   'Content-Type': 'video/mp4',

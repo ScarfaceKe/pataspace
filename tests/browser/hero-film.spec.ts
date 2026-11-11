@@ -7,6 +7,8 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   const section = page.locator('.ps-cinema');
   await expect(video).toHaveCount(1);
   await expect(video).toBeVisible();
+  await expect(page.locator('.ps-film__canvas')).toBeVisible();
+  await expect(page.locator('.ps-cinema__filmCue')).toContainText('Scroll to play');
   await expect(section).toHaveAttribute('data-act', '1');
   await page.waitForFunction(
     () => {
@@ -52,6 +54,11 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
     .toBe(true);
 
   const startTime = media.currentTime;
+  await expect(page.locator('.ps-film')).toHaveAttribute('data-painted', 'true');
+  const canvasFrame = () => page.locator('.ps-film__canvas').evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+  const startFrame = await canvasFrame();
+  expect(startFrame.length).toBeGreaterThan(1000);
+
   const geometry = await page.evaluate(() => {
     const section = document.querySelector<HTMLElement>('.ps-cinema');
     const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
@@ -81,6 +88,7 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await expect
     .poll(() => page.locator('.ps-cinema').evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))))
     .toBeGreaterThan(0.5);
+  await expect.poll(canvasFrame, { timeout: 10_000 }).not.toBe(startFrame);
 
   await page.evaluate(({ top, travel }) => {
     window.scrollTo({ top: top + travel, behavior: 'instant' });
@@ -108,4 +116,63 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await expect
     .poll(currentTime, { timeout: 10_000, intervals: [100, 250, 500] })
     .toBeLessThan(startTime + 0.25);
+});
+
+test.describe('phone portrait', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('keeps the painted film and cue visible without horizontal overflow', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.ps-film')).toHaveAttribute('data-painted', 'true');
+    await expect(page.locator('.ps-cinema__filmCue')).toBeVisible();
+    await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
+  });
+});
+
+test.describe('short phone landscape', () => {
+  test.use({ viewport: { width: 667, height: 375 }, isMobile: true, hasTouch: true });
+
+  test('keeps the film scrubbable and every act CTA inside the viewport', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.ps-film')).toHaveAttribute('data-painted', 'true');
+    await expect(page.locator('.ps-cinema__filmCue')).toBeVisible();
+
+    const geometry = await page.evaluate(() => {
+      const section = document.querySelector<HTMLElement>('.ps-cinema');
+      const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
+      if (!section || !pin) throw new Error('The pinned hero is not present');
+      return { top: section.getBoundingClientRect().top + window.scrollY, travel: section.offsetHeight - pin.offsetHeight };
+    });
+    expect(geometry.travel).toBeGreaterThan(100);
+
+    for (const act of ['2', '3'] as const) {
+      await page.evaluate(
+        ({ top, travel, act }) => window.scrollTo({ top: top + travel * (act === '2' ? 0.33 : 0.66), behavior: 'instant' }),
+        { ...geometry, act }
+      );
+      const actions = page.locator(`.ps-cinema[data-act="${act}"] .ps-cinema__chapter--${act} .ps-hero__actions`);
+      await expect(actions).toBeVisible();
+      await expect
+        .poll(
+          async () => {
+            const box = await actions.boundingBox();
+            return box ? Math.round(box.y + box.height) : Infinity;
+          },
+          { timeout: 5_000 }
+        )
+        .toBeLessThanOrEqual(375);
+    }
+
+    await page.evaluate(
+      ({ top, travel }) => window.scrollTo({ top: top + travel, behavior: 'instant' }),
+      geometry
+    );
+    await expect
+      .poll(() => page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).currentTime), {
+        timeout: 10_000,
+        intervals: [100, 250, 500]
+      })
+      .toBeGreaterThan(8);
+  });
 });

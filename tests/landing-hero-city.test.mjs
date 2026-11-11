@@ -32,7 +32,7 @@ assert.ok(
     heroFilm.includes('muted') &&
     heroFilm.includes('playsInline') &&
     heroFilm.includes('preload="auto"') &&
-    heroFilm.includes("const FILM_SRC = '/api/hero-film?v=1'"),
+    heroFilm.includes("const FILM_SRC = '/api/hero-film?v=2'"),
   'Hero film must be a silent, inline, preloaded video served by the film route'
 );
 assert.ok(
@@ -61,6 +61,14 @@ assert.ok(
   heroFilm.includes('prefers-reduced-motion: reduce') && heroFilm.includes('current = 0.62'),
   'Reduced motion must hold a composed city frame'
 );
+assert.ok(
+  heroFilm.includes('ps-film__canvas') && heroFilm.includes('context.drawImage(video'),
+  'The film must paint decoded frames to a canvas so Safari does not hold the poster'
+);
+assert.ok(
+  page.includes('ps-cinema__filmCue') && page.includes('Scroll to play'),
+  'The hero must make the silent, scroll-controlled film explicit'
+);
 
 const encodedFilm = filmModule.match(/HERO_FILM_BASE64\s*=\s*`([\s\S]*?)`/)?.[1]?.replace(/\s+/g, '');
 assert.ok(encodedFilm, 'The hero film must have an ASCII-safe base64 payload');
@@ -77,6 +85,11 @@ assert.ok(
     filmRoute.includes("'Accept-Ranges': 'bytes'") &&
     filmRoute.includes("bytes ${range.start}-${range.end}/${FILM.byteLength}"),
   'The city film route must serve video with byte ranges for seeking'
+);
+assert.equal(
+  heroFilm.match(/\/api\/hero-film\?v=(\d+)/)?.[1],
+  filmRoute.match(/hero-film-v(\d+)/)?.[1],
+  'The film cache-busting version and ETag must stay in sync'
 );
 
 assert.ok(

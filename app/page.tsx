@@ -106,6 +106,15 @@ export default function Home() {
               <div className="ps-cinema__grain" aria-hidden="true" />
             </div>
 
+            <p className="ps-cinema__filmCue" aria-hidden="true">
+              <span className="ps-cinema__filmCueDot" />
+              <span>Silent city film</span>
+              <span className="ps-cinema__filmCueAction">
+                Scroll to play
+                <span className="ps-cinema__filmCueArrow">↓</span>
+              </span>
+            </p>
+
             <p className="ps-cinema__coord" aria-hidden="true">
               01° 17′ S · 36° 49′ E — Nairobi, Kenya
             </p>
@@ -265,7 +274,7 @@ export default function Home() {
                 <p className="ps-cinema__readoutFoot">
                   <span className="ps-cinema__scrollHint">Scroll to move through the city. Reverse to rewind.</span>
                   <span className="ps-cinema__staticHint">City film. Motion is reduced on this device.</span>
-                  <span className="ps-cinema__timecode">03.5 — 10.0s</span>
+                  <span className="ps-cinema__timecode">00.0 — 10.0s</span>
                 </p>
               </aside>
             </div>
