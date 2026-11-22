@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-const FILM_SRC = '/api/hero-film?v=2';
+const FILM_SRC = '/api/hero-film?v=3';
 const POSTER_SRC = '/hero/pataspace-city-poster.jpg';
 
 /** The hero plays the supplied film from its first frame to its last. */
@@ -106,7 +106,9 @@ export function HeroFilm() {
         raf = 0;
         return;
       }
-      const damping = 1 - Math.exp(-delta * 8.5);
+      // A tighter follow keeps the film locked to the scroll gesture while
+      // still smoothing out trackpad and high-refresh display deltas.
+      const damping = 1 - Math.exp(-delta * 14);
       current += (target - current) * damping;
 
       if (Math.abs(target - current) < 0.0007) {

@@ -5250,3 +5250,40 @@ body:has(.property-registration-page .match-wizard) {
     padding-bottom: 18px;
   }
 }
+
+/* The source film is portrait 720x1280. At very large widths, stretching it
+   full-bleed crops most of the frame and upscales it beyond its native detail,
+   so present the whole film as a large framed panel instead. */
+@media screen and (min-width: 1800px) and (min-height: 621px) and (prefers-reduced-motion: no-preference) {
+  .ps-film {
+    top: 50%;
+    right: clamp(48px, 3vw, 96px);
+    bottom: auto;
+    left: auto;
+    width: auto;
+    height: min(72vh, 960px);
+    aspect-ratio: 720 / 1280;
+    transform: translateY(-50%);
+    border: 1px solid rgba(243, 236, 220, 0.2);
+    box-shadow: 0 30px 90px rgba(2, 10, 8, 0.44);
+  }
+
+  /* The panel matches the film's own ratio, so drop the full-bleed upscale
+     and parallax shift that would otherwise crop the portrait frame. */
+  .ps-film .ps-film__video,
+  .ps-film .ps-film__canvas {
+    object-fit: contain;
+    transform: none;
+  }
+
+  .ps-cinema__actNo {
+    display: none;
+  }
+}
+
+/* Keep the flight card where it has room next to the panel. */
+@media screen and (min-width: 1800px) and (min-height: 621px) and (max-width: 2559px) and (prefers-reduced-motion: no-preference) {
+  .ps-cinema__readout {
+    display: none;
+  }
+}

@@ -40,9 +40,10 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
     };
   });
   expect(media.error).toBeNull();
-  expect(media.duration).toBeGreaterThan(5);
-  expect(media.width).toBeGreaterThan(0);
-  expect(media.height).toBeGreaterThan(0);
+  expect(media.duration).toBeGreaterThan(9);
+  expect(media.width).toBe(720);
+  expect(media.height).toBe(1280);
+  expect(await video.evaluate((element) => (element as HTMLVideoElement).muted)).toBe(true);
   const videoBox = await video.boundingBox();
   expect(videoBox).not.toBeNull();
   expect(videoBox?.width).toBeGreaterThan(300);
@@ -116,6 +117,24 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await expect
     .poll(currentTime, { timeout: 10_000, intervals: [100, 250, 500] })
     .toBeLessThan(startTime + 0.25);
+});
+
+test.describe('large desktop', () => {
+  test.use({ viewport: { width: 2560, height: 1440 } });
+
+  test('shows the whole portrait film at a near-native size instead of upscaling it full-bleed', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.ps-film')).toHaveAttribute('data-painted', 'true');
+    await expect(page.locator('.ps-cinema__filmCue')).toBeVisible();
+    await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
+    await expect(page.locator('.ps-cinema__readout')).toBeVisible();
+
+    const box = await page.locator('.ps-film').boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.width).toBeLessThanOrEqual(600);
+    expect(Math.abs((box?.width ?? 0) / (box?.height ?? 1) - 720 / 1280)).toBeLessThan(0.02);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
+  });
 });
 
 test.describe('phone portrait', () => {
