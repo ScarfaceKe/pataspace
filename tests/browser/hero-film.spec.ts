@@ -17,6 +17,21 @@ async function waitForHeroLayout(page: Page) {
   );
 }
 
+/** The progress value the hero's own measurement derives from the scroll. */
+async function scrollTarget(page: Page) {
+  return page.evaluate(() => {
+    const section = document.querySelector<HTMLElement>('.ps-cinema');
+    const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
+    if (!section || !pin) throw new Error('The pinned hero is not present');
+    const travel = section.offsetHeight - pin.offsetHeight;
+    const raw =
+      travel > 1
+        ? (pin.getBoundingClientRect().top - section.getBoundingClientRect().top) / travel
+        : -section.getBoundingClientRect().top / Math.max(1, section.getBoundingClientRect().height);
+    return Math.max(0, Math.min(1, raw));
+  });
+}
+
 test('scrolling the hero plays the full film, reveals the page, and rewinds on reverse scroll', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
@@ -99,18 +114,23 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await expect(section).toHaveAttribute('data-act', '4');
 
   const currentTime = () => video.evaluate((element) => (element as HTMLVideoElement).currentTime);
+  const progress = () =>
+    page.locator('.ps-cinema').evaluate((element) => Number(element.style.getPropertyValue('--cinema-p')));
   await expect
     .poll(currentTime, { timeout: 10_000, intervals: [100, 250, 500] })
     .toBeGreaterThan(startTime + 2);
-  const forwardTime = await currentTime();
-  await expect
-    .poll(() => page.locator('.ps-cinema').evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))))
-    .toBeGreaterThan(0.5);
+  await expect.poll(progress, { timeout: 10_000 }).toBeGreaterThan(0.5);
   await expect.poll(canvasFrame, { timeout: 10_000 }).not.toBe(startFrame);
 
-  // Stopping the scroll must freeze the frame immediately, not drift on.
-  await page.waitForTimeout(900);
-  expect(Math.abs((await currentTime()) - forwardTime)).toBeLessThan(0.05);
+  // Release: the eased value finishes the travel it was given, decelerating,
+  // then holds perfectly still on the frame the scroll asked for.
+  const releaseTarget = await scrollTarget(page);
+  await expect.poll(progress, { timeout: 10_000 }).toBeCloseTo(releaseTarget, 2);
+  await page.waitForTimeout(1200);
+  const forwardTime = await currentTime();
+  await page.waitForTimeout(800);
+  expect(await progress()).toBeCloseTo(releaseTarget, 2);
+  expect(Math.abs((await currentTime()) - forwardTime)).toBeLessThan(0.06);
 
   await page.evaluate(({ top, travel }) => {
     window.scrollTo({ top: top + travel, behavior: 'instant' });
@@ -138,6 +158,84 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await expect
     .poll(currentTime, { timeout: 10_000, intervals: [100, 250, 500] })
     .toBeLessThan(startTime + 0.25);
+});
+
+test('coasts after release, settles exactly on the target, and reverses mid-settle', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await waitForHeroLayout(page);
+  const section = page.locator('.ps-cinema');
+  const film = page.locator('.ps-film__video');
+  const progress = () => section.evaluate((element) => Number(element.style.getPropertyValue('--cinema-p')));
+  const currentTime = () => film.evaluate((element) => (element as HTMLVideoElement).currentTime);
+
+  const geometry = await page.evaluate(() => {
+    const cinema = document.querySelector<HTMLElement>('.ps-cinema');
+    const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
+    if (!cinema || !pin) throw new Error('The pinned hero is not present');
+    return { top: cinema.getBoundingClientRect().top + window.scrollY, travel: cinema.offsetHeight - pin.offsetHeight };
+  });
+  const jump = (fraction: number) =>
+    page.evaluate(
+      (args: { top: number; travel: number; fraction: number }) =>
+        window.scrollTo({ top: args.top + args.travel * args.fraction, behavior: 'instant' }),
+      { ...geometry, fraction }
+    );
+
+  // A release is a coast, not a jump cut: after the page has stopped moving
+  // the film is still travelling, and it approaches without passing the target.
+  await jump(0.5);
+  const releaseTarget = await scrollTarget(page);
+  await expect.poll(progress, { timeout: 2_000 }).toBeGreaterThan(releaseTarget * 0.2);
+  const settledScroll = await page.evaluate(() => window.scrollY);
+  const early = await progress();
+  // The page is already still; the film must keep moving out of its own settle.
+  await expect.poll(progress, { timeout: 3_000 }).toBeGreaterThan(early + 0.01);
+  const later = await progress();
+  expect(await page.evaluate(() => window.scrollY)).toBe(settledScroll);
+  expect(later).toBeLessThanOrEqual(releaseTarget + 0.0005);
+
+  await expect.poll(progress, { timeout: 10_000 }).toBeCloseTo(releaseTarget, 2);
+  await page.waitForTimeout(1200);
+  const settled = await progress();
+  const settledTime = await currentTime();
+  await page.waitForTimeout(800);
+  expect(await progress()).toBeCloseTo(settled, 3);
+  expect(Math.abs((await currentTime()) - settledTime)).toBeLessThan(0.06);
+
+  // Narration is derived from the same eased value: the chapter at rest is the
+  // film's band, and exactly one chapter is visible.
+  const restingProgress = await progress();
+  await expect(section).toHaveAttribute('data-act', String(Math.min(4, Math.floor(restingProgress * 5)) + 1));
+  expect(
+    await page.evaluate(
+      () =>
+        Array.from(document.querySelectorAll<HTMLElement>('.ps-cinema__chapter')).filter(
+          (chapter) => getComputedStyle(chapter).visibility === 'visible'
+        ).length
+    )
+  ).toBe(1);
+
+  // Changing direction while the film is still settling must carry it straight
+  // back, without jumping or undershooting the new target.
+  await jump(0.9);
+  await expect.poll(progress, { timeout: 3_000 }).toBeGreaterThan(0.6);
+  const outbound = await progress();
+  await jump(0.25);
+  const reverseTarget = await scrollTarget(page);
+  expect(reverseTarget).toBeLessThan(outbound - 0.2);
+  await expect.poll(progress, { timeout: 3_000 }).toBeLessThan(outbound - 0.02);
+  await expect.poll(progress, { timeout: 10_000 }).toBeCloseTo(reverseTarget, 2);
+  await page.waitForTimeout(1200);
+  const landed = await progress();
+  expect(landed).toBeGreaterThan(reverseTarget - 0.004);
+  expect(landed).toBeLessThan(reverseTarget + 0.004);
+
+  // The end of the runway must rest on the final frame and never pass it.
+  await jump(1);
+  await expect.poll(progress, { timeout: 5_000 }).toBeCloseTo(1, 3);
+  await expect.poll(currentTime, { timeout: 5_000 }).toBeGreaterThan(9.5);
+  await page.waitForTimeout(400);
+  expect(await progress()).toBeLessThanOrEqual(1);
 });
 
 test.describe('reduced motion', () => {
@@ -237,11 +335,16 @@ test.describe('narration', () => {
       await expect.poll(visibleChapter).toBe(step);
     }
 
-    // Freeze check: message and frame hold while nothing is scrolling.
+    // Settle check: after the short coast finishes, message and frame hold.
     await at(0.5);
     await expect.poll(visibleChapter).toBe('3');
+    const messageTarget = await scrollTarget(page);
+    await expect
+      .poll(() => section.evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))), { timeout: 10_000 })
+      .toBeCloseTo(messageTarget, 2);
+    await page.waitForTimeout(1200);
     const before = await page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).currentTime);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(900);
     expect(await visibleChapter()).toBe('3');
     expect(await page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).currentTime)).toBeCloseTo(before, 2);
   });

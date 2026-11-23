@@ -48,7 +48,7 @@ assert.ok(
   'The city film must advance from scroll, not autoplay or loop'
 );
 assert.ok(
-  heroFilm.includes("window.addEventListener('scroll', readScroll, { passive: true })"),
+  heroFilm.includes("window.addEventListener('scroll', onScroll, { passive: true })"),
   'The city film must listen to real scroll'
 );
 assert.ok(
@@ -56,23 +56,29 @@ assert.ok(
   'The hero must scrub from the first frame of the film'
 );
 assert.ok(
-  heroFilm.includes("String(Math.min(4, Math.floor(target * 5)) + 1)"),
-  'Five message beats must be derived from the same scroll progress as the film'
+  heroFilm.includes("String(Math.min(4, Math.floor(progress * 5)) + 1)"),
+  'Five message beats must be derived from the same eased progress as the film'
 );
 assert.ok(
   heroFilm.includes('video.currentTime = time') &&
     heroFilm.includes('requestAnimationFrame(tick)') &&
     heroFilm.includes('const time = FILM_START + (end - FILM_START) * clamp01(progress);') &&
-    heroFilm.includes('current = target;') &&
-    !heroFilm.includes('damping'),
-  'Scroll progress must map straight to video time, with no easing after the scroll stops'
+    heroFilm.includes('const SETTLE_TAU = 0.24;') &&
+    heroFilm.includes('Math.exp(-dt / tau)') &&
+    heroFilm.includes('clamp01(current + delta *') &&
+    heroFilm.includes('current = target;'),
+  'Scroll progress must reach the film through a clamped, decaying settle that ends exactly on the target'
+);
+assert.ok(
+  !heroFilm.includes('setInterval') && !heroFilm.includes('setTimeout'),
+  'The settle must be frame-driven, not timer-driven'
 );
 assert.ok(
   heroFilm.includes("addEventListener('canplay', onCanPlay)"),
   'The film must re-seek after enough data is buffered to paint'
 );
 assert.ok(
-  !heroFilm.includes('current = 0.62') && !heroFilm.includes('if (reducedMotion)'),
+  !heroFilm.includes('current = 0.62') && !heroFilm.includes('if (reducedMotion)') && !heroFilm.includes('prefers-reduced-motion'),
   'The film must scrub for every visitor, including reduced-motion users'
 );
 assert.ok(

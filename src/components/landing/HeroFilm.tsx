@@ -16,6 +16,10 @@ function clamp01(value: number) {
  * The supplied founder film is the hero artwork. It is silent, never
  * autoplays, and is scrubbed by the same scroll position that drives the
  * rest of the hero. Reversing the scroll rewinds it frame-for-frame.
+ *
+ * The film is not yanked to the raw scroll value: it follows it through a
+ * short, clamped settle, so releasing the scroll coasts to a rest instead of
+ * freezing the instant the gesture ends.
  */
 export function HeroFilm() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -35,8 +39,21 @@ export function HeroFilm() {
     const pin = host.closest('.ps-cinema__pin') as HTMLElement | null;
     if (!section || !pin) return;
 
+    // The scroll position is the only source of motion: the film never plays
+    // on its own. It follows the scroll target with a short, time-based lag so
+    // that letting go coasts to rest instead of hitting a pause button. These
+    // are time constants in seconds, so the feel is identical at 60Hz and at
+    // 120Hz, and an exponential approach can never overshoot its target.
+    const FOLLOW_TAU = 0.045;
+    const SETTLE_TAU = 0.24;
+    const INPUT_GRACE = 80;
+    const REST_EPSILON = 0.002;
+
     let target = 0;
     let current = 0;
+    let primed = false;
+    let lastInputAt = 0;
+    let lastFrameAt = 0;
     let visible = true;
     let raf = 0;
     let duration = 0;
@@ -80,27 +97,50 @@ export function HeroFilm() {
       }
     };
 
+    // One value feeds the film and the narration, so a message can only change
+    // on the frame the film actually crosses into it.
     const updateProgress = (progress: number) => {
       section.style.setProperty('--cinema-p', progress.toFixed(4));
+      const act = String(Math.min(4, Math.floor(progress * 5)) + 1);
+      if (section.dataset.act !== act) section.dataset.act = act;
       seek(progress);
     };
 
-    // The scroll position alone decides the frame: no easing, so the film
-    // freezes the instant the visitor stops scrolling. Frames are applied once
-    // per animation frame to avoid piling up seeks during a fast gesture.
-    const tick = () => {
+    // One frame of the settle. While input is arriving the film tracks the
+    // target closely (FOLLOW_TAU); after release the travel that is left is
+    // closed with a longer constant (SETTLE_TAU), which reads as momentum and
+    // then a gentle rest. The settle ends as soon as the target is reached, so
+    // a settled hero is perfectly still and never drifts.
+    const tick = (now: number) => {
       raf = 0;
       if (!visible) return;
-      current = target;
+      // Real elapsed time, capped so a long stall cannot overshoot: the step is
+      // always a fraction of the remaining distance, so this stays a snap at
+      // worst. A low frame rate must not stretch the settle into slow motion.
+      const dt = lastFrameAt ? Math.min(0.25, Math.max(0.001, (now - lastFrameAt) / 1000)) : 1 / 60;
+      lastFrameAt = now;
+      const delta = target - current;
+
+      if (Math.abs(delta) <= REST_EPSILON) {
+        current = target;
+        updateProgress(current);
+        return;
+      }
+
+      const active = now - lastInputAt < INPUT_GRACE;
+      const tau = active ? FOLLOW_TAU : SETTLE_TAU;
+      current = clamp01(current + delta * (1 - Math.exp(-dt / tau)));
       updateProgress(current);
+      raf = requestAnimationFrame(tick);
     };
 
     const wake = () => {
       if (raf || !visible) return;
+      lastFrameAt = 0;
       raf = requestAnimationFrame(tick);
     };
 
-    const readScroll = () => {
+    const readTarget = () => {
       // Progress is driven by scroll alone. It must not wait for the film to
       // load, or a slow or blocked video would leave the whole hero frozen.
       const sectionRect = section.getBoundingClientRect();
@@ -113,21 +153,29 @@ export function HeroFilm() {
         // to measure. Scrub the film as the hero itself passes the viewport.
         target = clamp01(-sectionRect.top / Math.max(1, sectionRect.height));
       }
-      // Apply immediately as well, so a throttled tab or a paging jump never
-      // leaves the frame behind the scroll position.
-      current = target;
-      updateProgress(current);
+    };
 
-      // Five narration beats, each a fifth of the film, driven by the same
-      // progress value that seeks the video.
-      const act = String(Math.min(4, Math.floor(target * 5)) + 1);
-      if (section.dataset.act !== act) section.dataset.act = act;
+    // Fresh input wins immediately: it moves the target and wakes the settle,
+    // which continues from wherever the eased value is. A direction change
+    // mid-settle therefore carries the film back the other way without a jump.
+    const onScroll = () => {
+      readTarget();
+      lastInputAt = performance.now();
+      if (!primed) {
+        primed = true;
+        current = target;
+        updateProgress(current);
+      }
       wake();
     };
 
     const resize = () => {
-      readScroll();
-      if (!raf) updateProgress(current);
+      // A resize re-measures the runway; snap to the new mapping instead of
+      // gliding to it, which would look like drift unrelated to the scroll.
+      readTarget();
+      primed = true;
+      current = target;
+      updateProgress(current);
     };
 
     const onVisibility = () => {
@@ -163,13 +211,12 @@ export function HeroFilm() {
       duration = Number.isFinite(video.duration) ? video.duration : 0;
       // The visitor may already have scrolled while the film was loading, so
       // jump straight to the frame their scroll position asks for.
-      current = target;
       updateProgress(current);
       // Prime the decoder once without playing the film. This makes repeated
       // currentTime seeks work on iOS, then immediately returns to a still.
       primeDecoder();
       queuePaint();
-      readScroll();
+      readTarget();
     };
 
     const onVideoError = () => {
@@ -206,18 +253,24 @@ export function HeroFilm() {
     startScroll();
 
     function startScroll() {
-      window.addEventListener('scroll', readScroll, { passive: true });
+      // The first measurement is applied instantly: a restored scroll position
+      // must not animate the film up from zero.
+      readTarget();
+      primed = true;
+      current = target;
+      updateProgress(current);
+
+      window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', resize);
       document.addEventListener('visibilitychange', onVisibility);
       window.addEventListener('pagehide', onPageHide);
       window.addEventListener('pageshow', onPageShow);
       window.addEventListener('touchstart', onFirstGesture, { passive: true, once: true });
       window.addEventListener('pointerdown', onFirstGesture, { passive: true, once: true });
-      readScroll();
     }
 
     return () => {
-      window.removeEventListener('scroll', readScroll);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pagehide', onPageHide);
