@@ -91,6 +91,10 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
     .toBeGreaterThan(0.5);
   await expect.poll(canvasFrame, { timeout: 10_000 }).not.toBe(startFrame);
 
+  // Stopping the scroll must freeze the frame immediately, not drift on.
+  await page.waitForTimeout(900);
+  expect(Math.abs((await currentTime()) - forwardTime)).toBeLessThan(0.05);
+
   await page.evaluate(({ top, travel }) => {
     window.scrollTo({ top: top + travel, behavior: 'instant' });
   }, geometry);
@@ -177,17 +181,19 @@ test.describe('film unavailable', () => {
 test.describe('large desktop', () => {
   test.use({ viewport: { width: 2560, height: 1440 } });
 
-  test('shows the whole portrait film at a near-native size instead of upscaling it full-bleed', async ({ page }) => {
+  test('contains the portrait film instead of cropping it into a landscape hero', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.ps-film')).toHaveAttribute('data-painted', 'true');
     await expect(page.locator('.ps-cinema__filmCue')).toBeVisible();
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
-    await expect(page.locator('.ps-cinema__readout')).toBeVisible();
 
     const box = await page.locator('.ps-film').boundingBox();
     expect(box).not.toBeNull();
-    expect(box?.width).toBeLessThanOrEqual(600);
-    expect(Math.abs((box?.width ?? 0) / (box?.height ?? 1) - 720 / 1280)).toBeLessThan(0.02);
+    // The film element spans the pinned hero; the contained video keeps its
+    // own portrait ratio inside it, so no architectural content is cropped.
+    expect(box?.width).toBeGreaterThan(2400);
+    expect(await page.locator('.ps-film__video').evaluate((element) => getComputedStyle(element).objectFit)).toBe('contain');
+    expect(await page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).videoWidth / (element as HTMLVideoElement).videoHeight)).toBeCloseTo(720 / 1280, 3);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
   });
 });

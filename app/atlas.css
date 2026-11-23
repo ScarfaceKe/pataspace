@@ -3368,12 +3368,14 @@
     linear-gradient(160deg, #071b13 0%, #061710 52%, #04110c 100%);
 }
 
+/* The founder film is portrait 720x1280. It is contained, never cropped or
+   stretched: on landscape screens the dark hero becomes the surround. */
 .ps-film {
   position: absolute;
-  inset: -2%;
+  inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #04110c url("/hero/pataspace-city-poster.jpg") center / cover no-repeat;
+  background: #04110c url("/hero/pataspace-city-poster.jpg") center / contain no-repeat;
 }
 
 .ps-film__video,
@@ -3382,12 +3384,9 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 54% 45%;
+  object-fit: contain;
+  object-position: center;
   filter: saturate(1.02) contrast(1.04) brightness(1.02) sepia(0.02);
-  transform: translate3d(0, calc(var(--cinema-p, 0) * -1.4%), 0) scale(1.04);
-  transform-origin: 50% 55%;
-  will-change: transform;
 }
 
 .ps-film__video {
@@ -4008,8 +4007,7 @@
 
   .ps-film__video,
   .ps-film__canvas {
-    object-position: 50% 36%;
-    transform: translate3d(0, calc(var(--cinema-p, 0) * -1.4% - 5%), 0) scale(1.08);
+    object-position: center;
     filter: saturate(0.98) contrast(1.05) brightness(0.96) sepia(0.03);
   }
 
@@ -4107,7 +4105,7 @@
 
   .ps-film__video,
   .ps-film__canvas {
-    object-position: 50% 32%;
+    object-position: center;
     filter: saturate(0.98) contrast(1.05) brightness(0.93) sepia(0.03);
   }
 
@@ -5251,39 +5249,4 @@ body:has(.property-registration-page .match-wizard) {
   }
 }
 
-/* The source film is portrait 720x1280. At very large widths, stretching it
-   full-bleed crops most of the frame and upscales it beyond its native detail,
-   so present the whole film as a large framed panel instead. */
-@media screen and (min-width: 1800px) and (min-height: 621px) and (prefers-reduced-motion: no-preference) {
-  .ps-film {
-    top: 50%;
-    right: clamp(48px, 3vw, 96px);
-    bottom: auto;
-    left: auto;
-    width: auto;
-    height: min(72vh, 960px);
-    aspect-ratio: 720 / 1280;
-    transform: translateY(-50%);
-    border: 1px solid rgba(243, 236, 220, 0.2);
-    box-shadow: 0 30px 90px rgba(2, 10, 8, 0.44);
-  }
 
-  /* The panel matches the film's own ratio, so drop the full-bleed upscale
-     and parallax shift that would otherwise crop the portrait frame. */
-  .ps-film .ps-film__video,
-  .ps-film .ps-film__canvas {
-    object-fit: contain;
-    transform: none;
-  }
-
-  .ps-cinema__actNo {
-    display: none;
-  }
-}
-
-/* Keep the flight card where it has room next to the panel. */
-@media screen and (min-width: 1800px) and (min-height: 621px) and (max-width: 2559px) and (prefers-reduced-motion: no-preference) {
-  .ps-cinema__readout {
-    display: none;
-  }
-}

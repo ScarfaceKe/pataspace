@@ -50,18 +50,18 @@ assert.ok(
 assert.ok(
   heroFilm.includes('video.currentTime = time') &&
     heroFilm.includes('requestAnimationFrame(tick)') &&
-    heroFilm.includes('current += (target - current) * damping'),
-  'The film must be seekable and reversible from damped scroll progress'
+    heroFilm.includes('const time = FILM_START + (end - FILM_START) * clamp01(progress);') &&
+    heroFilm.includes('current = target;') &&
+    !heroFilm.includes('damping'),
+  'Scroll progress must map straight to video time, with no easing after the scroll stops'
 );
 assert.ok(
   heroFilm.includes("addEventListener('canplay', onCanPlay)"),
   'The film must re-seek after enough data is buffered to paint'
 );
 assert.ok(
-  heroFilm.includes('prefers-reduced-motion: reduce') &&
-    heroFilm.includes('if (reducedMotion)') &&
-    heroFilm.includes('current = target'),
-  'Reduced motion must still scrub the film from scroll, without smoothing'
+  !heroFilm.includes('current = 0.62') && !heroFilm.includes('if (reducedMotion)'),
+  'The film must scrub for every visitor, including reduced-motion users'
 );
 assert.ok(
   !heroFilm.includes('if (!started) return'),
@@ -100,9 +100,10 @@ assert.equal(
 
 assert.ok(
   css.includes('.ps-film__video') &&
-    css.includes('object-fit: cover') &&
-    css.includes("object-position: 50% 36%"),
-  'The city film must fill the hero and adapt its crop on mobile'
+    css.includes('object-fit: contain') &&
+    css.includes('object-position: center') &&
+    !/\.ps-film__video[\s\S]{0,200}?scale\(/.test(css),
+  'The portrait film must be contained in the hero, never cropped or upscaled'
 );
 
 assert.ok(

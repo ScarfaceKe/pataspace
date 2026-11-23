@@ -35,12 +35,10 @@ export function HeroFilm() {
     const pin = host.closest('.ps-cinema__pin') as HTMLElement | null;
     if (!section || !pin) return;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let target = 0;
     let current = 0;
     let visible = true;
     let raf = 0;
-    let lastTime = 0;
     let duration = 0;
 
     // Paint the current video frame into a canvas. Safari can leave a paused
@@ -87,51 +85,18 @@ export function HeroFilm() {
       seek(progress);
     };
 
-    const tick = (time: number) => {
-      if (!visible) {
-        raf = 0;
-        return;
-      }
-      // Do not let a slow frame rate stall the scrub. Capping this at 50 ms
-      // made the film fall behind on high-resolution or throttled displays.
-      const delta = lastTime ? Math.min(0.25, (time - lastTime) / 1000) : 0.016;
-      lastTime = time;
-      // Keep the first and last frames exact at the hero boundaries. The
-      // damping is for the journey; it must not leave the next section
-      // visible while the film is still catching up to its final frame.
-      if (target <= 0.001 || target >= 0.999) {
-        current = target;
-        updateProgress(current);
-        raf = 0;
-        return;
-      }
-      // Reduced motion still follows the scroll, it just skips the smoothing
-      // and the ambient parallax so only the visitor's own scrolling moves it.
-      if (reducedMotion) {
-        current = target;
-        updateProgress(current);
-        raf = 0;
-        return;
-      }
-      // A tighter follow keeps the film locked to the scroll gesture while
-      // still smoothing out trackpad and high-refresh display deltas.
-      const damping = 1 - Math.exp(-delta * 14);
-      current += (target - current) * damping;
-
-      if (Math.abs(target - current) < 0.0007) {
-        current = target;
-        updateProgress(current);
-        raf = 0;
-        return;
-      }
-
+    // The scroll position alone decides the frame: no easing, so the film
+    // freezes the instant the visitor stops scrolling. Frames are applied once
+    // per animation frame to avoid piling up seeks during a fast gesture.
+    const tick = () => {
+      raf = 0;
+      if (!visible) return;
+      current = target;
       updateProgress(current);
-      raf = requestAnimationFrame(tick);
     };
 
     const wake = () => {
       if (raf || !visible) return;
-      lastTime = 0;
       raf = requestAnimationFrame(tick);
     };
 
@@ -148,13 +113,10 @@ export function HeroFilm() {
         // to measure. Scrub the film as the hero itself passes the viewport.
         target = clamp01(-sectionRect.top / Math.max(1, sectionRect.height));
       }
-      // A large jump (paging, an anchor link, or a tab whose animation frames
-      // are throttled) must not wait for the smoothing to walk there, or the
-      // hero would keep showing an older frame than the scroll position.
-      if (Math.abs(target - current) > 0.25) {
-        current = target;
-        updateProgress(current);
-      }
+      // Apply immediately as well, so a throttled tab or a paging jump never
+      // leaves the frame behind the scroll position.
+      current = target;
+      updateProgress(current);
 
       const act = target < 0.3 ? '1' : target < 0.62 ? '2' : '3';
       if (section.dataset.act !== act) section.dataset.act = act;
