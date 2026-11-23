@@ -91,12 +91,12 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await page.evaluate(({ top, travel }) => {
     window.scrollTo({ top: top + travel * 0.45, behavior: 'instant' });
   }, geometry);
-  await expect(section).toHaveAttribute('data-act', '2');
+  await expect(section).toHaveAttribute('data-act', '3');
 
   await page.evaluate(({ top, travel }) => {
     window.scrollTo({ top: top + travel * 0.65, behavior: 'instant' });
   }, geometry);
-  await expect(section).toHaveAttribute('data-act', '3');
+  await expect(section).toHaveAttribute('data-act', '4');
 
   const currentTime = () => video.evaluate((element) => (element as HTMLVideoElement).currentTime);
   await expect
@@ -115,7 +115,7 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
   await page.evaluate(({ top, travel }) => {
     window.scrollTo({ top: top + travel, behavior: 'instant' });
   }, geometry);
-  await expect(section).toHaveAttribute('data-act', '3');
+  await expect(section).toHaveAttribute('data-act', '5');
   await expect
     .poll(currentTime, { timeout: 10_000, intervals: [100, 250, 500] })
     .toBeGreaterThan(media.duration - 0.35);
@@ -164,7 +164,7 @@ test.describe('reduced motion', () => {
       ({ top, height }) => window.scrollTo({ top: top + height * 0.75, behavior: 'instant' }),
       geometry
     );
-    await expect(section).toHaveAttribute('data-act', '3');
+    await expect(section).toHaveAttribute('data-act', '4');
     await expect
       .poll(() => section.evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))))
       .toBeGreaterThan(0.5);
@@ -190,10 +190,60 @@ test.describe('film unavailable', () => {
     });
 
     await page.evaluate(({ top, travel }) => window.scrollTo({ top: top + travel * 0.7, behavior: 'instant' }), geometry);
-    await expect(section).toHaveAttribute('data-act', '3');
+    await expect(section).toHaveAttribute('data-act', '4');
     await expect
       .poll(() => section.evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))))
       .toBeGreaterThan(0.5);
+  });
+});
+
+test.describe('narration', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test('switches messages on scroll progress alone and freezes when scrolling stops', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const section = page.locator('.ps-cinema');
+    await waitForHeroLayout(page);
+
+    const geometry = await page.evaluate(() => {
+      const cinema = document.querySelector<HTMLElement>('.ps-cinema');
+      const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
+      if (!cinema || !pin) throw new Error('The pinned hero is not present');
+      return { top: cinema.getBoundingClientRect().top + window.scrollY, travel: cinema.offsetHeight - pin.offsetHeight };
+    });
+
+    const at = async (fraction: number) => {
+      await page.evaluate(({ top, travel, fraction: f }) => window.scrollTo({ top: top + travel * f, behavior: 'instant' }), {
+        ...geometry,
+        fraction
+      });
+    };
+    const visibleChapter = () =>
+      page.evaluate(() => {
+        const chapters = Array.from(document.querySelectorAll<HTMLElement>('.ps-cinema__chapter'));
+        const shown = chapters.filter((chapter) => getComputedStyle(chapter).visibility === 'visible');
+        return shown.length === 1 ? shown[0].className.split('ps-cinema__chapter--')[1] : `count:${shown.length}`;
+      });
+
+    for (const [fraction, step] of [
+      [0.1, '1'],
+      [0.3, '2'],
+      [0.5, '3'],
+      [0.7, '4'],
+      [0.95, '5']
+    ] as const) {
+      await at(fraction);
+      await expect(section).toHaveAttribute('data-act', step);
+      await expect.poll(visibleChapter).toBe(step);
+    }
+
+    // Freeze check: message and frame hold while nothing is scrolling.
+    await at(0.5);
+    await expect.poll(visibleChapter).toBe('3');
+    const before = await page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).currentTime);
+    await page.waitForTimeout(1000);
+    expect(await visibleChapter()).toBe('3');
+    expect(await page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).currentTime)).toBeCloseTo(before, 2);
   });
 });
 
@@ -202,15 +252,18 @@ test.describe('large desktop', () => {
 
   test('contains the portrait film instead of cropping it into a landscape hero', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await waitForHeroLayout(page);
     await expect(page.locator('.ps-film')).toHaveAttribute('data-painted', 'true');
     await expect(page.locator('.ps-cinema__filmCue')).toBeVisible();
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
 
-    const box = await page.locator('.ps-film').boundingBox();
+    const box = await page.locator('.ps-cinema__art').boundingBox();
     expect(box).not.toBeNull();
-    // The film element spans the pinned hero; the contained video keeps its
-    // own portrait ratio inside it, so no architectural content is cropped.
-    expect(box?.width).toBeGreaterThan(2400);
+    // The film sits in a framed panel inset from the screen edges, and the
+    // contained video keeps its portrait ratio, so nothing is cropped.
+    expect(box?.width).toBeLessThanOrEqual(2560 - 16);
+    expect(box?.x).toBeGreaterThan(4);
+    expect(await page.locator('.ps-cinema__art').evaluate((element) => parseFloat(getComputedStyle(element).borderTopLeftRadius))).toBeGreaterThan(8);
     expect(await page.locator('.ps-film__video').evaluate((element) => getComputedStyle(element).objectFit)).toBe('contain');
     expect(await page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).videoWidth / (element as HTMLVideoElement).videoHeight)).toBeCloseTo(720 / 1280, 3);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
@@ -245,23 +298,22 @@ test.describe('short phone landscape', () => {
     });
     expect(geometry.travel).toBeGreaterThan(100);
 
-    for (const act of ['2', '3'] as const) {
-      await page.evaluate(
-        ({ top, travel, act }) => window.scrollTo({ top: top + travel * (act === '2' ? 0.33 : 0.66), behavior: 'instant' }),
-        { ...geometry, act }
-      );
-      const actions = page.locator(`.ps-cinema[data-act="${act}"] .ps-cinema__chapter--${act} .ps-hero__actions`);
-      await expect(actions).toBeVisible();
-      await expect
-        .poll(
-          async () => {
-            const box = await actions.boundingBox();
-            return box ? Math.round(box.y + box.height) : Infinity;
-          },
-          { timeout: 5_000 }
-        )
-        .toBeLessThanOrEqual(375);
-    }
+    // The closing message carries the hero CTAs; they must fit the viewport.
+    await page.evaluate(
+      ({ top, travel }) => window.scrollTo({ top: top + travel * 0.95, behavior: 'instant' }),
+      geometry
+    );
+    const actions = page.locator('.ps-cinema[data-act="5"] .ps-cinema__chapter--5 .ps-hero__actions');
+    await expect(actions).toBeVisible();
+    await expect
+      .poll(
+        async () => {
+          const box = await actions.boundingBox();
+          return box ? Math.round(box.y + box.height) : Infinity;
+        },
+        { timeout: 5_000 }
+      )
+      .toBeLessThanOrEqual(375);
 
     await page.evaluate(
       ({ top, travel }) => window.scrollTo({ top: top + travel, behavior: 'instant' }),

@@ -123,6 +123,8 @@ export default function Home() {
               <span>01</span>
               <span>02</span>
               <span>03</span>
+              <span>04</span>
+              <span>05</span>
             </div>
 
             <div className="ps-cinema__inner">
@@ -146,8 +148,9 @@ export default function Home() {
                       </p>
 
                       <p className="ps-hero__lede">
-                        PataSpace helps Kenyans quickly find houses, shops, offices, and event halls — through a few
-                        clear questions, verified listings, and vacancies that are actually confirmed.
+                        Discover a better way to find property. PataSpace helps Kenyans quickly find houses, shops,
+                        offices, and event halls — through a few clear questions, verified listings, and vacancies that
+                        are actually confirmed.
                       </p>
 
                       <div className="ps-hero__actions">
@@ -172,17 +175,35 @@ export default function Home() {
                   <article className="ps-cinema__chapter ps-cinema__chapter--2">
                     <div className="ps-hero__copy">
                       <p className="ps-kicker">
-                        <span>02 / The standard</span>
+                        <span>02 / Every kind of space</span>
+                        <span>Houses to halls</span>
+                      </p>
+                      <h2 className="ps-hero__title ps-hero__title--chapter">
+                        Houses, shops,
+                        <br />
+                        <em>offices, halls.</em>
+                      </h2>
+                      <p className="ps-hero__chapterLede">
+                        Find houses, shops, offices and event halls in one place — whatever your next chapter needs, the
+                        atlas covers it.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article className="ps-cinema__chapter ps-cinema__chapter--3">
+                    <div className="ps-hero__copy">
+                      <p className="ps-kicker">
+                        <span>03 / The standard</span>
                         <span>Human-checked</span>
                       </p>
                       <h2 className="ps-hero__title ps-hero__title--chapter">
-                        Verified
+                        Genuine space,
                         <br />
-                        <em>before visible.</em>
+                        <em>verified first.</em>
                       </h2>
                       <p className="ps-hero__chapterLede">
-                        A person visits every property. Photos, address, rent, and the person behind the listing are
-                        checked before you ever see it. If a space is gone, it leaves the atlas.
+                        Explore genuine available properties. A person visits every property. Photos, address, rent, and
+                        the person behind the listing are checked before you ever see it.
                       </p>
                       <ul className="ps-cinema__claims">
                         <li>
@@ -198,32 +219,41 @@ export default function Home() {
                           <span>fake listings tolerated</span>
                         </li>
                       </ul>
-                      <div className="ps-hero__actions">
-                        <a className="ps-btn ps-btn--ochre" href="#standard">
-                          See the standard
-                          <ArrowRight />
-                        </a>
-                        <a className="ps-btn ps-btn--ghost" href="#how">
-                          How it works
-                        </a>
-                      </div>
                     </div>
                   </article>
 
-                  <article className="ps-cinema__chapter ps-cinema__chapter--3">
+                  <article className="ps-cinema__chapter ps-cinema__chapter--4">
                     <div className="ps-hero__copy">
                       <p className="ps-kicker">
-                        <span>03 / The opening</span>
+                        <span>04 / Before you move</span>
+                        <span>Checked daily</span>
+                      </p>
+                      <h2 className="ps-hero__title ps-hero__title--chapter">
+                        Know what&apos;s
+                        <br />
+                        <em>available.</em>
+                      </h2>
+                      <p className="ps-hero__chapterLede">
+                        Know what is available before making your move. Vacancies are confirmed daily and anything taken
+                        leaves the atlas, so you never chase a space that is gone.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article className="ps-cinema__chapter ps-cinema__chapter--5">
+                    <div className="ps-hero__copy">
+                      <p className="ps-kicker">
+                        <span>05 / The opening</span>
                         <span>Ready when you are</span>
                       </p>
                       <h2 className="ps-hero__title ps-hero__title--chapter">
-                        Find the one.
+                        Find your next
                         <br />
-                        <em>Then move.</em>
+                        <em>space.</em>
                       </h2>
                       <p className="ps-hero__chapterLede">
-                        A few clear questions. A short list of spaces that actually fit. Direct contact when you&apos;re
-                        ready — no broker games, no dead ends.
+                        Find your next space with PataSpace. A few clear questions, a short list that actually fits, and
+                        direct contact when you&apos;re ready.
                       </p>
                       <div className="ps-hero__actions">
                         <a className="ps-btn ps-btn--ochre" href="#entry">
@@ -256,15 +286,29 @@ export default function Home() {
                   <li>
                     <span className="ps-cinema__routeNo">02</span>
                     <span className="ps-cinema__routeCopy">
-                      <b>The standard</b>
-                      <small>Checked before it&apos;s shown</small>
+                      <b>Every kind of space</b>
+                      <small>Houses, shops, offices, halls</small>
                     </span>
                   </li>
                   <li>
                     <span className="ps-cinema__routeNo">03</span>
                     <span className="ps-cinema__routeCopy">
+                      <b>The standard</b>
+                      <small>Checked before it&apos;s shown</small>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="ps-cinema__routeNo">04</span>
+                    <span className="ps-cinema__routeCopy">
+                      <b>Before you move</b>
+                      <small>Know what&apos;s open</small>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="ps-cinema__routeNo">05</span>
+                    <span className="ps-cinema__routeCopy">
                       <b>The opening</b>
-                      <small>Find it, then move</small>
+                      <small>Find your next space</small>
                     </span>
                   </li>
                 </ol>

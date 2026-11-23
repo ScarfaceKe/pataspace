@@ -118,7 +118,9 @@ export function HeroFilm() {
       current = target;
       updateProgress(current);
 
-      const act = target < 0.3 ? '1' : target < 0.62 ? '2' : '3';
+      // Five narration beats, each a fifth of the film, driven by the same
+      // progress value that seeks the video.
+      const act = String(Math.min(4, Math.floor(target * 5)) + 1);
       if (section.dataset.act !== act) section.dataset.act = act;
       wake();
     };

@@ -15,8 +15,16 @@ assert.ok(!page.includes('KenyaCinema'), 'The flat Kenya fallback must not be th
 assert.ok(!page.includes('<audio'), 'The hero must never attach an audio element');
 assert.equal(
   (page.match(/ps-cinema__chapter ps-cinema__chapter--/g) ?? []).length,
-  3,
-  'The hero must contain three fly-through acts'
+  5,
+  'The hero must contain five scroll-synchronized messages'
+);
+assert.ok(
+  page.includes('Discover a better way to find property') &&
+    page.includes('Find houses, shops, offices and event halls') &&
+    page.includes('Explore genuine available properties') &&
+    page.includes('Know what is available before making your move') &&
+    page.includes('Find your next space with PataSpace'),
+  'All five PataSpace messages must be present in the hero'
 );
 assert.ok(
   page.includes('data-act="1"') && page.includes('ps-cinema__route') && page.includes('Flight path'),
@@ -46,6 +54,10 @@ assert.ok(
 assert.ok(
   heroFilm.includes('const FILM_START = 0;'),
   'The hero must scrub from the first frame of the film'
+);
+assert.ok(
+  heroFilm.includes("String(Math.min(4, Math.floor(target * 5)) + 1)"),
+  'Five message beats must be derived from the same scroll progress as the film'
 );
 assert.ok(
   heroFilm.includes('video.currentTime = time') &&
@@ -98,6 +110,12 @@ assert.equal(
   'The film cache-busting version and ETag must stay in sync'
 );
 
+assert.ok(
+  css.includes('--ps-panel-inset: clamp(10px, 1.8vw, 30px)') &&
+    css.includes('inset: var(--ps-panel-inset)') &&
+    css.includes('border-radius: clamp(14px, 1.6vw, 26px)'),
+  'The hero film must sit in a contained, framed panel rather than bleeding edge to edge'
+);
 assert.ok(
   css.includes('.ps-film__video') &&
     css.includes('object-fit: contain') &&
