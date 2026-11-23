@@ -1,4 +1,21 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/** The styled, hydrated hero: styles applied and scroll progress wired up. */
+async function waitForHeroLayout(page: Page) {
+  await page.waitForFunction(
+    () => {
+      const cinema = document.querySelector<HTMLElement>('.ps-cinema');
+      const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
+      if (!cinema || !pin) return false;
+      // Stylesheet applied (the hero paints its own background) and the
+      // component wired up (it writes scroll progress onto the section).
+      const styled = getComputedStyle(cinema).backgroundColor !== 'rgba(0, 0, 0, 0)';
+      return styled && cinema.style.getPropertyValue('--cinema-p') !== '';
+    },
+    undefined,
+    { timeout: 20_000 }
+  );
+}
 
 test('scrolling the hero plays the full film, reveals the page, and rewinds on reverse scroll', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -130,6 +147,7 @@ test.describe('reduced motion', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     const section = page.locator('.ps-cinema');
     await expect(section).toHaveAttribute('data-act', '1');
+    await waitForHeroLayout(page);
     await page.waitForFunction(() => {
       const film = document.querySelector<HTMLVideoElement>('.ps-film__video');
       return Boolean(film && film.readyState >= 1);
@@ -162,6 +180,7 @@ test.describe('film unavailable', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     const section = page.locator('.ps-cinema');
     await expect(section).toHaveAttribute('data-act', '1');
+    await waitForHeroLayout(page);
 
     const geometry = await page.evaluate(() => {
       const cinema = document.querySelector<HTMLElement>('.ps-cinema');
