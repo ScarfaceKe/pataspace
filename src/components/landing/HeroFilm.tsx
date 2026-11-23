@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 
 const FILM_SRC = '/api/hero-film?v=4';
-const POSTER_SRC = '/hero/pataspace-city-poster.jpg';
+const POSTER_SRC = '/hero/pataspace-city-poster-v2.jpg';
 
 /** The poster is full-bleed behind the film; the film fills the panel. */
 const POSTER_ASPECT = 720 / 1280;
