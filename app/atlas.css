@@ -3355,13 +3355,14 @@
     linear-gradient(160deg, #071b13 0%, #061710 52%, #04110c 100%);
 }
 
-/* The founder film fills the framed hero panel; the copy is laid over it. */
+/* The founder film keeps its whole frame inside the panel. On wide screens
+   that leaves dark side bars; on phones the bars fall above and below. */
 .ps-film {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #04110c url("/hero/pataspace-city-poster.jpg") center / cover no-repeat;
+  background: #04110c url("/hero/pataspace-city-poster.jpg") center / contain no-repeat;
 }
 
 .ps-film__video {
@@ -3370,7 +3371,7 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   filter: saturate(1.02) contrast(1.04) brightness(1.02) sepia(0.02);
 }

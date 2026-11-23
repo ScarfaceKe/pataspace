@@ -30,15 +30,15 @@ const currentTime = (page: Page) =>
 const isPaused = (page: Page) =>
   page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).paused);
 
-/** The film element spans the framed panel and crops to fill it. */
-async function expectFilmFillsPanel(page: Page) {
+/** The whole film frame is contained inside the framed panel, uncropped. */
+async function expectWholeFilmInPanel(page: Page) {
   const art = await page.locator('.ps-cinema__art').boundingBox();
   const film = await page.locator('.ps-film').boundingBox();
   const video = await page.locator('.ps-film__video').boundingBox();
   expect(art).not.toBeNull();
   expect(film).not.toBeNull();
   expect(video).not.toBeNull();
-  if (!art || !film || !video) return;
+  if (!art || !film || !video) throw new Error('The framed film panel is not laid out');
 
   expect(Math.abs(film.x - art.x)).toBeLessThan(3);
   expect(Math.abs(film.y - art.y)).toBeLessThan(3);
@@ -46,10 +46,28 @@ async function expectFilmFillsPanel(page: Page) {
   expect(Math.abs(film.height - art.height)).toBeLessThan(3);
   expect(Math.abs(video.width - art.width)).toBeLessThan(3);
   expect(Math.abs(video.height - art.height)).toBeLessThan(3);
-  expect(await page.locator('.ps-film__video').evaluate((element) => getComputedStyle(element).objectFit)).toBe('cover');
+
+  const fit = await page.locator('.ps-film__video').evaluate((element) => {
+    const media = element as HTMLVideoElement;
+    const scale = Math.min(media.clientWidth / media.videoWidth, media.clientHeight / media.videoHeight);
+    return {
+      width: Math.round(media.videoWidth * scale),
+      height: Math.round(media.videoHeight * scale),
+      boxWidth: media.clientWidth,
+      boxHeight: media.clientHeight,
+      objectFit: getComputedStyle(media).objectFit
+    };
+  });
+
+  expect(fit.objectFit).toBe('contain');
+  expect(fit.width).toBeLessThanOrEqual(fit.boxWidth + 1);
+  expect(fit.height).toBeLessThanOrEqual(fit.boxHeight + 1);
+  // One pair of edges is touched: the frame is never scaled down inside the box.
+  expect(Math.max(fit.width / fit.boxWidth, fit.height / fit.boxHeight)).toBeGreaterThan(0.98);
+  return fit;
 }
 
-test('plays the silent film by itself, fills the panel, holds the last frame, and replays from the top', async ({ page }) => {
+test('plays the silent film by itself, shows the whole frame, holds the last frame, and replays from the top', async ({ page }) => {
   test.setTimeout(80_000);
   await openHero(page);
 
@@ -85,7 +103,7 @@ test('plays the silent film by itself, fills the panel, holds the last frame, an
   // It starts on its own, without a gesture or a scroll.
   await expect.poll(() => currentTime(page), { timeout: 20_000 }).toBeGreaterThan(1);
   expect(await isPaused(page)).toBe(false);
-  await expectFilmFillsPanel(page);
+  await expectWholeFilmInPanel(page);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
   // It plays through once and rests on the final frame.
@@ -147,11 +165,11 @@ test('scrolls the page normally and replays the film from the top', async ({ pag
 test.describe('reduced motion', () => {
   test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 
-  test('still plays the film inside the framed panel', async ({ page }) => {
+  test('still plays the whole film inside the framed panel', async ({ page }) => {
     await openHero(page);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
     await expect.poll(() => currentTime(page), { timeout: 20_000 }).toBeGreaterThan(0.5);
-    await expectFilmFillsPanel(page);
+    await expectWholeFilmInPanel(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
   });
 });
@@ -159,7 +177,7 @@ test.describe('reduced motion', () => {
 test.describe('large desktop', () => {
   test.use({ viewport: { width: 2560, height: 1440 } });
 
-  test('fills the framed panel without horizontal overflow', async ({ page }) => {
+  test('contains the whole film with side bars and no horizontal overflow', async ({ page }) => {
     await openHero(page);
     await waitForFilmData(page);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
@@ -172,7 +190,8 @@ test.describe('large desktop', () => {
     expect(
       await page.locator('.ps-cinema__art').evaluate((element) => parseFloat(getComputedStyle(element).borderTopLeftRadius))
     ).toBeGreaterThan(8);
-    await expectFilmFillsPanel(page);
+    const fit = await expectWholeFilmInPanel(page);
+    expect(fit.width).toBeLessThan(fit.boxWidth - 100);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
     expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(2880);
   });
@@ -181,12 +200,12 @@ test.describe('large desktop', () => {
 test.describe('phone portrait', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test('plays the film full-panel without horizontal overflow', async ({ page }) => {
+  test('plays the whole film without horizontal overflow', async ({ page }) => {
     await openHero(page);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
     await expect(page.locator('a[href="/auth/login"], a[href="/auth/register"]')).toHaveCount(0);
     await expect.poll(() => currentTime(page), { timeout: 20_000 }).toBeGreaterThan(0.5);
-    await expectFilmFillsPanel(page);
+    await expectWholeFilmInPanel(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
   });
 });
@@ -215,7 +234,7 @@ test.describe('short phone landscape', () => {
 
 test.describe('film unavailable', () => {
   test('keeps the poster and the page usable when the film cannot load', async ({ page }) => {
-    await page.route('**/api/hero-film*', (route) => route.abort());
+    await page.route('**/hero/pataspace-city-film.mp4*', (route) => route.abort());
     await openHero(page);
     await expect(page.locator('.ps-cinema__filmCue')).toHaveCount(0);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();

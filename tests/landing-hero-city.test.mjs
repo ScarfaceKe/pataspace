@@ -4,8 +4,6 @@ import assert from 'node:assert/strict';
 const page = readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8');
 const header = readFileSync(new URL('../src/components/landing/AtlasHeader.tsx', import.meta.url), 'utf8');
 const heroFilm = readFileSync(new URL('../src/components/landing/HeroFilm.tsx', import.meta.url), 'utf8');
-const filmRoute = readFileSync(new URL('../app/api/hero-film/route.ts', import.meta.url), 'utf8');
-const filmModule = readFileSync(new URL('../src/server/hero-film.ts', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../app/atlas.css', import.meta.url), 'utf8');
 const featuredRoute = readFileSync(new URL('../app/api/landing/featured/route.ts', import.meta.url), 'utf8');
 const reviewsRoute = readFileSync(new URL('../app/api/landing/reviews/route.ts', import.meta.url), 'utf8');
@@ -62,8 +60,8 @@ assert.ok(
     heroFilm.includes('muted') &&
     heroFilm.includes('playsInline') &&
     heroFilm.includes('preload="auto"') &&
-    heroFilm.includes("const FILM_SRC = '/api/hero-film?v=3'"),
-  'Hero film must be a silent, inline, preloaded video served by the film route'
+    heroFilm.includes("const FILM_SRC = '/hero/pataspace-city-film.mp4'"),
+  'Hero film must be a silent, inline, preloaded static video'
 );
 assert.ok(heroFilm.includes('autoPlay'), 'The city film must start on its own when the page opens');
 assert.ok(!heroFilm.includes('loop'), 'The city film must play once and rest, not loop');
@@ -91,27 +89,14 @@ assert.ok(
   'A normally playing film needs no canvas frame copying'
 );
 
-const encodedFilm = filmModule.match(/HERO_FILM_BASE64\s*=\s*`([\s\S]*?)`/)?.[1]?.replace(/\s+/g, '');
-assert.ok(encodedFilm, 'The hero film must have an ASCII-safe base64 payload');
-const filmAsset = Buffer.from(encodedFilm, 'base64');
+const filmAsset = readFileSync(new URL('../public/hero/pataspace-city-film.mp4', import.meta.url));
 const posterAsset = statSync(new URL('../public/hero/pataspace-city-poster.jpg', import.meta.url));
 assert.ok(filmAsset.length > 0, 'The city film asset must be present');
-assert.ok(filmAsset.length < 7_000_000, 'The city film must stay within the source export size');
+assert.ok(filmAsset.length < 2_500_000, 'The city film must stay light enough to stream smoothly');
 assert.ok(posterAsset.size < 250_000, 'The city film poster must stay lightweight');
 assert.ok(filmAsset.includes(Buffer.from('vide')), 'The city film must carry a video track');
 assert.ok(!filmAsset.includes(Buffer.from('soun')), 'The city film must have no audio track');
 assert.ok(posterAsset.size > 0, 'The city film poster must be present');
-assert.ok(
-  filmRoute.includes("'Content-Type': 'video/mp4'") &&
-    filmRoute.includes("'Accept-Ranges': 'bytes'") &&
-    filmRoute.includes("bytes ${range.start}-${range.end}/${FILM.byteLength}"),
-  'The city film route must serve video with byte ranges for seeking'
-);
-assert.equal(
-  heroFilm.match(/\/api\/hero-film\?v=(\d+)/)?.[1],
-  filmRoute.match(/hero-film-v(\d+)/)?.[1],
-  'The film cache-busting version and ETag must stay in sync'
-);
 
 assert.ok(
   /\.ps-cinema\s*\{\s*position: relative;\s*height: auto;/.test(css) &&
@@ -125,9 +110,10 @@ assert.ok(
   'The hero film must sit in a contained, framed panel rather than bleeding edge to edge'
 );
 assert.ok(
-  /\.ps-film__video\s*\{[^}]*object-fit:\s*cover/.test(css) &&
-    /\.ps-film\s*\{[^}]*background:[^;]*center \/ cover/.test(css),
-  'The film must fill the framed panel'
+  /\.ps-film__video\s*\{[^}]*object-fit:\s*contain/.test(css) &&
+    /\.ps-film\s*\{[^}]*background:[^;]*center \/ contain/.test(css) &&
+    !/\.ps-film__video\s*\{[^}]*scale\(/.test(css),
+  'The whole film frame must stay inside the framed panel, never cropped'
 );
 
 assert.ok(
