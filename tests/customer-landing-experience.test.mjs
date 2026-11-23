@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
 const page = readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8');
+// Copy assertions should not depend on how JSX wraps a sentence across lines.
+const pageText = page.replace(/\s+/g, ' ');
 const entry = readFileSync(new URL('../src/components/EntryPointCards.tsx', import.meta.url), 'utf8');
 const customerHome = readFileSync(new URL('../src/components/CustomerHomeStart.tsx', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8');
@@ -13,7 +15,7 @@ const matchComponents = [
 ].join('\n');
 
 assert.ok(page.includes('Begin guided search'), 'Landing hero must include prominent guided search CTA');
-assert.ok(page.includes('helps Kenyans quickly find houses, shops, offices, and event halls'), 'Landing hero must immediately explain PataSpace');
+assert.ok(pageText.includes('helps Kenyans quickly find houses, shops, offices, and event halls'), 'Landing hero must immediately explain PataSpace');
 assert.ok(page.includes('trust-chip-row') || page.includes('hero-trust-chips'), 'Landing hero must quietly communicate trust');
 assert.ok(entry.includes('WORKFLOW_ROUTES') && entry.includes('/match/house') && entry.includes('/match/shop') && entry.includes('/match/office') && entry.includes('/match/event-hall'), 'Entry choices must launch approved match workflows');
 assert.ok(entry.includes('What would you like to find?'), 'Landing entry panel must keep search first');
