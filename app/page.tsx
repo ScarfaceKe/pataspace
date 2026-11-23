@@ -106,15 +106,6 @@ export default function Home() {
               <div className="ps-cinema__grain" aria-hidden="true" />
             </div>
 
-            <p className="ps-cinema__filmCue" aria-hidden="true">
-              <span className="ps-cinema__filmCueDot" />
-              <span>Silent city film</span>
-              <span className="ps-cinema__filmCueAction">
-                Scroll to play
-                <span className="ps-cinema__filmCueArrow">↓</span>
-              </span>
-            </p>
-
             <p className="ps-cinema__coord" aria-hidden="true">
               01° 17′ S · 36° 49′ E — Nairobi, Kenya
             </p>
@@ -264,7 +255,7 @@ export default function Home() {
                           List your property
                         </a>
                       </div>
-                      <p className="ps-cinema__actNote">Free to browse · Sign in only when you&apos;re ready to unlock.</p>
+                      <p className="ps-cinema__actNote">Free to browse · No account needed to start.</p>
                     </div>
                   </article>
                 </div>
@@ -273,7 +264,6 @@ export default function Home() {
               <aside className="ps-cinema__readout ps-cinema__flight" aria-label="Film flight path">
                 <p className="ps-cinema__readoutMeta">
                   <span>Flight path · 001</span>
-                  <span>Silent</span>
                 </p>
                 <ol className="ps-cinema__route">
                   <li>
@@ -312,12 +302,7 @@ export default function Home() {
                     </span>
                   </li>
                 </ol>
-                <div className="ps-cinema__meter" aria-hidden="true">
-                  <i />
-                </div>
                 <p className="ps-cinema__readoutFoot">
-                  <span className="ps-cinema__scrollHint">Scroll to move through the city. Reverse to rewind.</span>
-                  <span className="ps-cinema__staticHint">City film. Motion is reduced on this device.</span>
                   <span className="ps-cinema__timecode">00.0 — 10.0s</span>
                 </p>
               </aside>
@@ -327,7 +312,6 @@ export default function Home() {
               <span>Verified before visible</span>
               <span>Vacancy checked daily</span>
               <span>Built in Nairobi</span>
-              <span>Scroll to move through the city. Reverse to rewind.</span>
             </div>
           </div>
         </section>
@@ -628,8 +612,6 @@ export default function Home() {
               <a href="#standard">About PataSpace</a>
               <a href="#reviews">Reviews</a>
               <a href="/support">Contact Support</a>
-              <a href="/auth/login">Sign in</a>
-              <a href="/auth/register">Create an account</a>
             </div>
           </div>
 

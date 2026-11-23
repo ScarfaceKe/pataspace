@@ -26,9 +26,6 @@ export function AtlasHeader() {
         </nav>
 
         <div className="ps-header__actions">
-          <a className="ps-header__signin" href="/auth/login">
-            Sign in
-          </a>
           <a className="ps-btn ps-btn--ochre ps-btn--sm" href="#entry">
             Start a search
           </a>
@@ -40,7 +37,6 @@ export function AtlasHeader() {
                   {link.label}
                 </a>
               ))}
-              <a href="/auth/login">Sign in</a>
               <a href="/properties/register">List a space</a>
               <a href="#entry">Start a search</a>
             </div>

@@ -2,6 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
 const page = readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8');
+const header = readFileSync(new URL('../src/components/landing/AtlasHeader.tsx', import.meta.url), 'utf8');
 const heroFilm = readFileSync(new URL('../src/components/landing/HeroFilm.tsx', import.meta.url), 'utf8');
 const filmRoute = readFileSync(new URL('../app/api/hero-film/route.ts', import.meta.url), 'utf8');
 const filmModule = readFileSync(new URL('../src/server/hero-film.ts', import.meta.url), 'utf8');
@@ -10,13 +11,13 @@ const featuredRoute = readFileSync(new URL('../app/api/landing/featured/route.ts
 const reviewsRoute = readFileSync(new URL('../app/api/landing/reviews/route.ts', import.meta.url), 'utf8');
 const featuredCard = readFileSync(new URL('../src/components/landing/AtlasFeatured.tsx', import.meta.url), 'utf8');
 
-assert.ok(page.includes('HeroFilm') && page.includes('ps-cinema__pin'), 'Landing must render the pinned hero film');
+assert.ok(page.includes('HeroFilm') && page.includes('ps-cinema__pin'), 'Landing must render the framed hero film');
 assert.ok(!page.includes('KenyaCinema'), 'The flat Kenya fallback must not be the hero artwork');
 assert.ok(!page.includes('<audio'), 'The hero must never attach an audio element');
 assert.equal(
   (page.match(/ps-cinema__chapter ps-cinema__chapter--/g) ?? []).length,
   5,
-  'The hero must contain five scroll-synchronized messages'
+  'The hero must keep its five messages'
 );
 assert.ok(
   page.includes('Discover a better way to find property') &&
@@ -24,15 +25,36 @@ assert.ok(
     page.includes('Explore genuine available properties') &&
     page.includes('Know what is available before making your move') &&
     page.includes('Find your next space with PataSpace'),
-  'All five PataSpace messages must be present in the hero'
+  'All five PataSpace messages must remain in the hero'
 );
 assert.ok(
   page.includes('data-act="1"') && page.includes('ps-cinema__route') && page.includes('Flight path'),
   'The hero must expose the initial act and the film flight path'
 );
 assert.ok(
-  page.includes('Scroll to move through the city. Reverse to rewind.'),
-  'Hero must explain the scroll-controlled film'
+  !page.includes('Silent city film') && !page.includes('No sound') && !page.includes('ps-cinema__filmCue'),
+  'The hero must not label the film with a cue'
+);
+assert.ok(
+  !header.includes('/auth/login') && !header.includes('/auth/register') && !/sign in|sign up/i.test(header),
+  'The header must not offer sign in or sign up'
+);
+assert.ok(
+  !page.includes('/auth/login') &&
+    !page.includes('/auth/register') &&
+    !page.includes('Create an account') &&
+    !page.includes('Sign in'),
+  'The landing page must not offer sign in or sign up'
+);
+assert.ok(
+  !page.includes('Plays once · scroll back to the top to replay') &&
+    !page.includes('Plays once, then holds') &&
+    !page.includes('Silent film'),
+  'The hero must not explain its own playback in the copy'
+);
+assert.ok(
+  !page.includes('Scroll to play') && !page.includes('Reverse to rewind'),
+  'The hero must not ask the visitor to scroll in order to play or rewind the film'
 );
 
 assert.ok(
@@ -43,55 +65,30 @@ assert.ok(
     heroFilm.includes("const FILM_SRC = '/api/hero-film?v=3'"),
   'Hero film must be a silent, inline, preloaded video served by the film route'
 );
+assert.ok(heroFilm.includes('autoPlay'), 'The city film must start on its own when the page opens');
+assert.ok(!heroFilm.includes('loop'), 'The city film must play once and rest, not loop');
+assert.ok(!heroFilm.includes('controls'), 'The city film must not expose playback controls');
 assert.ok(
-  !heroFilm.includes('autoPlay') && !heroFilm.includes('loop'),
-  'The city film must advance from scroll, not autoplay or loop'
+  heroFilm.includes("window.addEventListener('scroll', onScroll, { passive: true })") &&
+    heroFilm.includes('window.scrollY') &&
+    heroFilm.includes('video.currentTime = 0'),
+  'Returning to the top of the page must start the film over from its first frame'
 );
 assert.ok(
-  heroFilm.includes("window.addEventListener('scroll', onScroll, { passive: true })"),
-  'The city film must listen to real scroll'
-);
-assert.ok(
-  heroFilm.includes('const FILM_START = 0;'),
-  'The hero must scrub from the first frame of the film'
-);
-assert.ok(
-  heroFilm.includes("String(Math.min(4, Math.floor(progress * 5)) + 1)"),
-  'Five message beats must be derived from the same eased progress as the film'
-);
-assert.ok(
-  heroFilm.includes('video.currentTime = time') &&
-    heroFilm.includes('requestAnimationFrame(tick)') &&
-    heroFilm.includes('const time = FILM_START + (end - FILM_START) * clamp01(progress);') &&
-    heroFilm.includes('const SETTLE_TAU = 0.24;') &&
-    heroFilm.includes('Math.exp(-dt / tau)') &&
-    heroFilm.includes('clamp01(current + delta *') &&
-    heroFilm.includes('current = target;'),
-  'Scroll progress must reach the film through a clamped, decaying settle that ends exactly on the target'
+  !heroFilm.includes('--cinema-p') && !heroFilm.includes('data-act') && !heroFilm.includes('requestAnimationFrame'),
+  'The film must not be scrubbed, settled, or advanced from scroll'
 );
 assert.ok(
   !heroFilm.includes('setInterval') && !heroFilm.includes('setTimeout'),
-  'The settle must be frame-driven, not timer-driven'
+  'The film must be driven by playback, not timers'
 );
 assert.ok(
-  heroFilm.includes("addEventListener('canplay', onCanPlay)"),
-  'The film must re-seek after enough data is buffered to paint'
+  heroFilm.includes('video.play()') && heroFilm.includes("addEventListener('pointerdown'"),
+  'Playback must retry on the first input if a browser blocks autoplay'
 );
 assert.ok(
-  !heroFilm.includes('current = 0.62') && !heroFilm.includes('if (reducedMotion)') && !heroFilm.includes('prefers-reduced-motion'),
-  'The film must scrub for every visitor, including reduced-motion users'
-);
-assert.ok(
-  !heroFilm.includes('if (!started) return'),
-  'The hero must follow scroll even when the film has not loaded yet'
-);
-assert.ok(
-  heroFilm.includes('ps-film__canvas') && heroFilm.includes('context.drawImage(video'),
-  'The film must paint decoded frames to a canvas so Safari does not hold the poster'
-);
-assert.ok(
-  page.includes('ps-cinema__filmCue') && page.includes('Scroll to play'),
-  'The hero must make the silent, scroll-controlled film explicit'
+  !heroFilm.includes('ps-film__canvas'),
+  'A normally playing film needs no canvas frame copying'
 );
 
 const encodedFilm = filmModule.match(/HERO_FILM_BASE64\s*=\s*`([\s\S]*?)`/)?.[1]?.replace(/\s+/g, '');
@@ -117,17 +114,20 @@ assert.equal(
 );
 
 assert.ok(
+  /\.ps-cinema\s*\{\s*position: relative;\s*height: auto;/.test(css) &&
+    !/\.ps-cinema__pin\s*\{[^}]*position:\s*sticky/.test(css),
+  'The hero must sit at the top of a normally scrolling page instead of pinning a scroll runway'
+);
+assert.ok(
   css.includes('--ps-panel-inset: clamp(10px, 1.8vw, 30px)') &&
     css.includes('inset: var(--ps-panel-inset)') &&
     css.includes('border-radius: clamp(14px, 1.6vw, 26px)'),
   'The hero film must sit in a contained, framed panel rather than bleeding edge to edge'
 );
 assert.ok(
-  css.includes('.ps-film__video') &&
-    css.includes('object-fit: contain') &&
-    css.includes('object-position: center') &&
-    !/\.ps-film__video[\s\S]{0,200}?scale\(/.test(css),
-  'The portrait film must be contained in the hero, never cropped or upscaled'
+  /\.ps-film__video\s*\{[^}]*object-fit:\s*cover/.test(css) &&
+    /\.ps-film\s*\{[^}]*background:[^;]*center \/ cover/.test(css),
+  'The film must fill the framed panel'
 );
 
 assert.ok(

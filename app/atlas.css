@@ -406,23 +406,6 @@
   gap: 10px;
 }
 
-.ps-header__signin {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 14px;
-  font-family: var(--ps-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(243, 236, 220, 0.7);
-  transition: color 160ms ease;
-}
-
-.ps-header__signin:hover {
-  color: var(--ps-paper);
-}
-
 .ps-mobile-menu {
   display: none;
   position: relative;
@@ -2798,10 +2781,6 @@
     display: block;
   }
 
-  .ps-header__actions .ps-header__signin {
-    display: none;
-  }
-
   .ps-hero__inner {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
@@ -3340,17 +3319,18 @@
   --ps-header-h: 76px;
 }
 
+/* One viewport of film at the top of the page. The section no longer holds a
+   scroll runway, so the rest of the page scrolls normally beneath it. */
 .ps-cinema {
   position: relative;
-  height: 286svh;
+  height: auto;
   background: var(--ps-forest-deep);
   color: var(--ps-paper);
 }
 
 .ps-cinema__pin {
   --ps-panel-inset: clamp(10px, 1.8vw, 30px);
-  position: sticky;
-  top: var(--ps-header-h);
+  position: relative;
   height: calc(100svh - var(--ps-header-h));
   /* The film sits in a framed panel inside the hero rather than bleeding to
      the edges of the screen; the page's dark ground shows around it. */
@@ -3375,33 +3355,24 @@
     linear-gradient(160deg, #071b13 0%, #061710 52%, #04110c 100%);
 }
 
-/* The founder film is portrait 720x1280. It is contained, never cropped or
-   stretched: on landscape screens the dark hero becomes the surround. */
+/* The founder film fills the framed hero panel; the copy is laid over it. */
 .ps-film {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #04110c url("/hero/pataspace-city-poster.jpg") center / contain no-repeat;
+  background: #04110c url("/hero/pataspace-city-poster.jpg") center / cover no-repeat;
 }
 
-.ps-film__video,
-.ps-film__canvas {
+.ps-film__video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  z-index: 0;
+  object-fit: cover;
   object-position: center;
   filter: saturate(1.02) contrast(1.04) brightness(1.02) sepia(0.02);
-}
-
-.ps-film__video {
-  z-index: 0;
-}
-
-.ps-film__canvas {
-  z-index: 1;
 }
 
 .ps-film__grade {
@@ -3438,64 +3409,6 @@
     linear-gradient(90deg, rgba(4, 17, 12, 0.94) 0%, rgba(4, 17, 12, 0.78) 23%, rgba(4, 17, 12, 0.28) 46%, rgba(4, 17, 12, 0.02) 68%, rgba(4, 17, 12, 0.12) 100%),
     linear-gradient(0deg, rgba(4, 17, 12, 0.9) 0%, rgba(4, 17, 12, 0.16) 26%, transparent 54%),
     radial-gradient(ellipse at 62% 45%, transparent 25%, rgba(4, 17, 12, 0.24) 80%);
-}
-
-.ps-cinema__filmCue {
-  position: absolute;
-  top: clamp(18px, 2.6vh, 28px);
-  left: 50%;
-  z-index: 8;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0;
-  padding: 8px 12px;
-  border: 1px solid rgba(243, 236, 220, 0.2);
-  background: rgba(4, 17, 12, 0.42);
-  font-family: var(--ps-mono);
-  font-size: 0.53rem;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(243, 236, 220, 0.78);
-  transform: translateX(-50%);
-  pointer-events: none;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.ps-cinema__filmCueDot {
-  width: 6px;
-  height: 6px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--ps-ochre);
-  box-shadow: 0 0 0 4px rgba(227, 163, 59, 0.14);
-  animation: ps-film-pulse 2.4s ease-in-out infinite;
-}
-
-.ps-cinema__filmCueAction {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding-left: 9px;
-  border-left: 1px solid rgba(243, 236, 220, 0.2);
-  color: var(--ps-ochre-soft);
-}
-
-.ps-cinema__filmCueArrow {
-  display: inline-block;
-  animation: ps-film-nudge 1.8s ease-in-out infinite;
-}
-
-@keyframes ps-film-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-}
-
-@keyframes ps-film-nudge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(2px); }
 }
 
 .ps-cinema__grain {
@@ -3669,23 +3582,6 @@
   background: var(--ps-clay);
 }
 
-.ps-cinema__meter {
-  height: 2px;
-  margin-top: 13px;
-  overflow: hidden;
-  background: var(--ps-line);
-}
-
-.ps-cinema__meter i {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: var(--ps-clay);
-  transform-origin: 0 50%;
-  transform: scaleX(calc(0.08 + var(--cinema-p, 0) * 0.84));
-  transition: transform 120ms linear;
-}
-
 .ps-cinema__readoutFoot {
   margin: 8px 0 0;
   font-family: var(--ps-mono);
@@ -3695,10 +3591,6 @@
   text-transform: uppercase;
   color: var(--ps-muted);
   opacity: 0.8;
-}
-
-.ps-cinema__staticHint {
-  display: none;
 }
 
 .ps-cinema__foot {
@@ -3971,7 +3863,7 @@
 
 @media (max-width: 960px) {
   .ps-cinema {
-    height: 246svh;
+    height: auto;
   }
 
   .ps-cinema__inner {
@@ -3982,8 +3874,6 @@
 
   .ps-cinema__copy {
     max-width: 660px;
-    opacity: calc(1 - var(--cinema-p, 0) * 0.9);
-    transform: translate3d(0, calc(var(--cinema-p, 0) * -26px), 0);
   }
 
   .ps-cinema__readout {
@@ -4012,8 +3902,7 @@
       radial-gradient(ellipse at 50% 36%, transparent 22%, rgba(4, 17, 12, 0.18) 86%);
   }
 
-  .ps-film__video,
-  .ps-film__canvas {
+  .ps-film__video {
     object-position: center;
     filter: saturate(0.98) contrast(1.05) brightness(0.96) sepia(0.03);
   }
@@ -4042,23 +3931,11 @@
   }
 
   .ps-cinema {
-    height: 224svh;
+    height: auto;
   }
 
   .ps-cinema__inner {
     padding: 70px 18px 92px;
-  }
-
-  .ps-cinema__filmCue {
-    top: 14px;
-    gap: 7px;
-    padding: 6px 9px;
-    font-size: 0.47rem;
-    letter-spacing: 0.1em;
-  }
-
-  .ps-cinema__filmCueAction {
-    padding-left: 7px;
   }
 
   .ps-hero__title {
@@ -4110,8 +3987,7 @@
     font-size: 0.48rem;
   }
 
-  .ps-film__video,
-  .ps-film__canvas {
+  .ps-film__video {
     object-position: center;
     filter: saturate(0.98) contrast(1.05) brightness(0.93) sepia(0.03);
   }
@@ -4245,19 +4121,6 @@
     height: auto;
   }
 
-  .ps-cinema__pin {
-    position: relative;
-    top: auto;
-    height: auto;
-    min-height: calc(100svh - var(--ps-header-h));
-  }
-
-  .ps-cinema__inner {
-    min-height: calc(100svh - var(--ps-header-h));
-    padding-top: 88px;
-    padding-bottom: 110px;
-  }
-
   .ps-cinema__copy {
     opacity: 1 !important;
     transform: none !important;
@@ -4265,18 +4128,6 @@
 
   .ps-kenya__loading {
     display: none;
-  }
-
-  .ps-cinema__scrollHint {
-    display: none;
-  }
-
-  .ps-cinema__staticHint {
-    display: inline;
-  }
-
-  .ps-cinema__meter i {
-    transform: scaleX(1);
   }
 }
 
@@ -5003,10 +4854,6 @@ body:has(.property-registration-page .match-wizard) {
   color: var(--ps-muted);
 }
 
-.ps-cinema__flight .ps-cinema__meter {
-  margin-top: 14px;
-}
-
 .ps-cinema__readoutFoot {
   display: flex;
   align-items: baseline;
@@ -5146,53 +4993,14 @@ body:has(.property-registration-page .match-wizard) {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ps-cinema__filmCueAction,
-  .ps-cinema__filmCueArrow {
-    display: none;
-  }
-
-  .ps-cinema__filmCueDot {
-    animation: none;
-    opacity: 0.8;
-  }
-
-  .ps-cinema__chapters {
-    display: block;
-  }
-
-  .ps-cinema__chapter {
-    position: relative;
-    display: block;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto;
-    transform: none !important;
-    filter: none !important;
-  }
-
-  .ps-cinema__chapter + .ps-cinema__chapter {
-    margin-top: clamp(44px, 8vh, 84px);
-    padding-top: clamp(32px, 6vh, 56px);
-    border-top: 1px solid rgba(243, 236, 220, 0.2);
-  }
-
-  .ps-cinema__actNo,
-  .ps-cinema__flight {
-    display: none;
-  }
-}
-
-/* Short landscape screens need a compact pinned hero too; without this the
-   film track disappears and the scroll promise in the film cue is false. */
+/* Short landscape screens keep the hero within one viewport. */
 @media screen and (max-height: 620px) and (orientation: landscape) and (prefers-reduced-motion: no-preference) {
   .ps-cinema {
-    height: 180svh;
+    height: auto;
   }
 
   .ps-cinema__pin {
-    position: sticky;
-    top: var(--ps-header-h);
+    position: relative;
     height: calc(100svh - var(--ps-header-h));
   }
 
