@@ -38,7 +38,6 @@ export function HeroFilm() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let target = 0;
     let current = 0;
-    let started = false;
     let visible = true;
     let raf = 0;
     let lastTime = 0;
@@ -106,6 +105,14 @@ export function HeroFilm() {
         raf = 0;
         return;
       }
+      // Reduced motion still follows the scroll, it just skips the smoothing
+      // and the ambient parallax so only the visitor's own scrolling moves it.
+      if (reducedMotion) {
+        current = target;
+        updateProgress(current);
+        raf = 0;
+        return;
+      }
       // A tighter follow keeps the film locked to the scroll gesture while
       // still smoothing out trackpad and high-refresh display deltas.
       const damping = 1 - Math.exp(-delta * 14);
@@ -129,11 +136,18 @@ export function HeroFilm() {
     };
 
     const readScroll = () => {
-      if (!started) return;
+      // Progress is driven by scroll alone. It must not wait for the film to
+      // load, or a slow or blocked video would leave the whole hero frozen.
       const sectionRect = section.getBoundingClientRect();
       const pinRect = pin.getBoundingClientRect();
-      const travel = Math.max(1, section.offsetHeight - pin.offsetHeight);
-      target = clamp01((pinRect.top - sectionRect.top) / travel);
+      const travel = section.offsetHeight - pin.offsetHeight;
+      if (travel > 1) {
+        target = clamp01((pinRect.top - sectionRect.top) / travel);
+      } else {
+        // The reduced-motion layout unpins the hero, so there is no pin travel
+        // to measure. Scrub the film as the hero itself passes the viewport.
+        target = clamp01(-sectionRect.top / Math.max(1, sectionRect.height));
+      }
       const act = target < 0.3 ? '1' : target < 0.62 ? '2' : '3';
       if (section.dataset.act !== act) section.dataset.act = act;
       wake();
@@ -175,18 +189,20 @@ export function HeroFilm() {
 
     const onLoadedMetadata = () => {
       duration = Number.isFinite(video.duration) ? video.duration : 0;
-      started = true;
+      // The visitor may already have scrolled while the film was loading, so
+      // jump straight to the frame their scroll position asks for.
+      current = target;
       updateProgress(current);
       // Prime the decoder once without playing the film. This makes repeated
       // currentTime seeks work on iOS, then immediately returns to a still.
       primeDecoder();
       queuePaint();
-      if (!reducedMotion) readScroll();
+      readScroll();
     };
 
     const onVideoError = () => {
-      // The poster is the complete fallback; there is nothing to seek.
-      started = false;
+      // The poster is the complete fallback; the hero still follows the scroll.
+      duration = 0;
     };
 
     const onCanPlay = () => {
@@ -215,15 +231,7 @@ export function HeroFilm() {
     }
     video.addEventListener('error', onVideoError);
 
-    if (reducedMotion) {
-      // Hold a composed city frame instead of animating the film.
-      duration = 10;
-      current = 0.62;
-      target = 0.62;
-      updateProgress(current);
-    } else {
-      startScroll();
-    }
+    startScroll();
 
     function startScroll() {
       window.addEventListener('scroll', readScroll, { passive: true });

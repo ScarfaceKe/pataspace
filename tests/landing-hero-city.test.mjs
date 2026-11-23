@@ -58,8 +58,14 @@ assert.ok(
   'The film must re-seek after enough data is buffered to paint'
 );
 assert.ok(
-  heroFilm.includes('prefers-reduced-motion: reduce') && heroFilm.includes('current = 0.62'),
-  'Reduced motion must hold a composed city frame'
+  heroFilm.includes('prefers-reduced-motion: reduce') &&
+    heroFilm.includes('if (reducedMotion)') &&
+    heroFilm.includes('current = target'),
+  'Reduced motion must still scrub the film from scroll, without smoothing'
+);
+assert.ok(
+  !heroFilm.includes('if (!started) return'),
+  'The hero must follow scroll even when the film has not loaded yet'
 );
 assert.ok(
   heroFilm.includes('ps-film__canvas') && heroFilm.includes('context.drawImage(video'),

@@ -119,6 +119,61 @@ test('scrolling the hero plays the full film, reveals the page, and rewinds on r
     .toBeLessThan(startTime + 0.25);
 });
 
+test.describe('reduced motion', () => {
+  test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+
+  test('still advances the film from scroll instead of freezing on one frame', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const section = page.locator('.ps-cinema');
+    await expect(section).toHaveAttribute('data-act', '1');
+    await page.waitForFunction(() => {
+      const film = document.querySelector<HTMLVideoElement>('.ps-film__video');
+      return Boolean(film && film.readyState >= 1);
+    });
+
+    const geometry = await page.evaluate(() => {
+      const cinema = document.querySelector<HTMLElement>('.ps-cinema');
+      if (!cinema) throw new Error('The hero is not present');
+      return { top: cinema.getBoundingClientRect().top + window.scrollY, height: cinema.getBoundingClientRect().height };
+    });
+
+    // The reduced-motion layout is unpinned; the film scrubs as the hero passes.
+    await page.evaluate(
+      ({ top, height }) => window.scrollTo({ top: top + height * 0.75, behavior: 'instant' }),
+      geometry
+    );
+    await expect(section).toHaveAttribute('data-act', '3');
+    await expect
+      .poll(() => section.evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))))
+      .toBeGreaterThan(0.5);
+    await expect
+      .poll(() => page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).currentTime))
+      .toBeGreaterThan(4);
+  });
+});
+
+test.describe('film unavailable', () => {
+  test('keeps the hero following scroll when the film cannot load', async ({ page }) => {
+    await page.route('**/api/hero-film*', (route) => route.abort());
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const section = page.locator('.ps-cinema');
+    await expect(section).toHaveAttribute('data-act', '1');
+
+    const geometry = await page.evaluate(() => {
+      const cinema = document.querySelector<HTMLElement>('.ps-cinema');
+      const pin = document.querySelector<HTMLElement>('.ps-cinema__pin');
+      if (!cinema || !pin) throw new Error('The pinned hero is not present');
+      return { top: cinema.getBoundingClientRect().top + window.scrollY, travel: cinema.offsetHeight - pin.offsetHeight };
+    });
+
+    await page.evaluate(({ top, travel }) => window.scrollTo({ top: top + travel * 0.7, behavior: 'instant' }), geometry);
+    await expect(section).toHaveAttribute('data-act', '3');
+    await expect
+      .poll(() => section.evaluate((element) => Number(element.style.getPropertyValue('--cinema-p'))))
+      .toBeGreaterThan(0.5);
+  });
+});
+
 test.describe('large desktop', () => {
   test.use({ viewport: { width: 2560, height: 1440 } });
 
