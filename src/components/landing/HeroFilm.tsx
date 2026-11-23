@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-const FILM_SRC = '/hero/pataspace-city-film.mp4';
+const FILM_SRC = '/api/hero-film?v=4';
 const POSTER_SRC = '/hero/pataspace-city-poster.jpg';
 
 /** How far down the page counts as having left the top. */

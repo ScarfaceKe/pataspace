@@ -60,7 +60,7 @@ assert.ok(
     heroFilm.includes('muted') &&
     heroFilm.includes('playsInline') &&
     heroFilm.includes('preload="auto"') &&
-    heroFilm.includes("const FILM_SRC = '/hero/pataspace-city-film.mp4'"),
+    heroFilm.includes("const FILM_SRC = '/api/hero-film?v=4'"),
   'Hero film must be a silent, inline, preloaded static video'
 );
 assert.ok(heroFilm.includes('autoPlay'), 'The city film must start on its own when the page opens');

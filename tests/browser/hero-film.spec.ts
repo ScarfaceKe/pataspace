@@ -234,7 +234,7 @@ test.describe('short phone landscape', () => {
 
 test.describe('film unavailable', () => {
   test('keeps the poster and the page usable when the film cannot load', async ({ page }) => {
-    await page.route('**/hero/pataspace-city-film.mp4*', (route) => route.abort());
+    await page.route('**/api/hero-film*', (route) => route.abort());
     await openHero(page);
     await expect(page.locator('.ps-cinema__filmCue')).toHaveCount(0);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
