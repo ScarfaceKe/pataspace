@@ -148,6 +148,14 @@ export function HeroFilm() {
         // to measure. Scrub the film as the hero itself passes the viewport.
         target = clamp01(-sectionRect.top / Math.max(1, sectionRect.height));
       }
+      // A large jump (paging, an anchor link, or a tab whose animation frames
+      // are throttled) must not wait for the smoothing to walk there, or the
+      // hero would keep showing an older frame than the scroll position.
+      if (Math.abs(target - current) > 0.25) {
+        current = target;
+        updateProgress(current);
+      }
+
       const act = target < 0.3 ? '1' : target < 0.62 ? '2' : '3';
       if (section.dataset.act !== act) section.dataset.act = act;
       wake();
