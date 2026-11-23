@@ -3355,24 +3355,25 @@
     linear-gradient(160deg, #071b13 0%, #061710 52%, #04110c 100%);
 }
 
-/* The founder film keeps its whole frame inside the panel. On wide screens
-   that leaves dark side bars; on phones the bars fall above and below. */
+/* The founder film fills the framed panel so the hero has no dark side bars.
+   The poster is full-bleed behind the film and the film is centered with a
+   small portrait bias so the skyline stays readable on cinematic crops. */
 .ps-film {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #04110c url("/hero/pataspace-city-poster.jpg") center / contain no-repeat;
+  background: #04110c url("/hero/pataspace-city-poster.jpg") center / cover no-repeat;
 }
 
 .ps-film__video {
   position: absolute;
   inset: 0;
+  z-index: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: center 38%;
   filter: saturate(1.02) contrast(1.04) brightness(1.02) sepia(0.02);
 }
 
@@ -3885,6 +3886,14 @@
     isolation: isolate;
   }
 
+  /* Short landscape phones are wider than the portrait film, so cover crops
+     the skyline out of view. Recenter on the upper skyline band instead. */
+  @media (max-width: 700px) and (orientation: landscape) and (max-height: 520px) {
+    .ps-film__video {
+      object-position: center 22%;
+    }
+  }
+
   .ps-cinema__inner::before {
     content: "";
     position: absolute;
@@ -3904,7 +3913,7 @@
   }
 
   .ps-film__video {
-    object-position: center;
+    object-position: center 32%;
     filter: saturate(0.98) contrast(1.05) brightness(0.96) sepia(0.03);
   }
 
@@ -3989,9 +3998,18 @@
   }
 
   .ps-film__video {
-    object-position: center;
+    object-position: center 14%;
     filter: saturate(0.98) contrast(1.05) brightness(0.93) sepia(0.03);
   }
+}
+
+/* Short landscape phones are wider than the portrait film, so cover crops
+   the skyline out of view. Recenter on the upper skyline band instead. */
+@media (max-width: 700px) and (orientation: landscape) and (max-height: 520px) {
+  .ps-film__video {
+    object-position: center 22%;
+  }
+}
 
   .ps-kenyaFallback__svg {
     width: 128vw;
@@ -4028,7 +4046,6 @@
   .ps-cinema__foot span:last-child {
     margin-left: auto;
   }
-}
 
 @media (max-width: 960px) and (orientation: landscape) {
   /* A 112vw portrait plate would crop both ends of Kenya in a short

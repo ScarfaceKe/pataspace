@@ -110,10 +110,10 @@ assert.ok(
   'The hero film must sit in a contained, framed panel rather than bleeding edge to edge'
 );
 assert.ok(
-  /\.ps-film__video\s*\{[^}]*object-fit:\s*contain/.test(css) &&
-    /\.ps-film\s*\{[^}]*background:[^;]*center \/ contain/.test(css) &&
+  /\.ps-film__video\s*\{[^}]*object-fit:\s*cover/.test(css) &&
+    /\.ps-film\s*\{[^}]*background:[^;]*center \/ cover/.test(css) &&
     !/\.ps-film__video\s*\{[^}]*scale\(/.test(css),
-  'The whole film frame must stay inside the framed panel, never cropped'
+  'The film must fill the framed panel, with the poster full-bleed behind it'
 );
 
 assert.ok(

@@ -30,7 +30,7 @@ const currentTime = (page: Page) =>
 const isPaused = (page: Page) =>
   page.locator('.ps-film__video').evaluate((element) => (element as HTMLVideoElement).paused);
 
-/** The whole film frame is contained inside the framed panel, uncropped. */
+/** The film fills the framed panel; the whole frame is still reachable inside it. */
 async function expectWholeFilmInPanel(page: Page) {
   const art = await page.locator('.ps-cinema__art').boundingBox();
   const film = await page.locator('.ps-film').boundingBox();
@@ -59,11 +59,9 @@ async function expectWholeFilmInPanel(page: Page) {
     };
   });
 
-  expect(fit.objectFit).toBe('contain');
-  expect(fit.width).toBeLessThanOrEqual(fit.boxWidth + 1);
-  expect(fit.height).toBeLessThanOrEqual(fit.boxHeight + 1);
-  // One pair of edges is touched: the frame is never scaled down inside the box.
-  expect(Math.max(fit.width / fit.boxWidth, fit.height / fit.boxHeight)).toBeGreaterThan(0.98);
+  expect(fit.objectFit).toBe('cover');
+  // Cover fills the box in at least one dimension, so the image is never smaller than the box.
+  expect(Math.max(fit.width / fit.boxWidth, fit.height / fit.boxHeight)).toBeGreaterThanOrEqual(0.99);
   return fit;
 }
 
@@ -165,7 +163,7 @@ test('scrolls the page normally and replays the film from the top', async ({ pag
 test.describe('reduced motion', () => {
   test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 
-  test('still plays the whole film inside the framed panel', async ({ page }) => {
+  test('still fills the framed panel without cropping the copy', async ({ page }) => {
     await openHero(page);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
     await expect.poll(() => currentTime(page), { timeout: 20_000 }).toBeGreaterThan(0.5);
@@ -177,7 +175,7 @@ test.describe('reduced motion', () => {
 test.describe('large desktop', () => {
   test.use({ viewport: { width: 2560, height: 1440 } });
 
-  test('contains the whole film with side bars and no horizontal overflow', async ({ page }) => {
+  test('fills the framed panel and keeps the hero within the viewport', async ({ page }) => {
     await openHero(page);
     await waitForFilmData(page);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
@@ -190,17 +188,40 @@ test.describe('large desktop', () => {
     expect(
       await page.locator('.ps-cinema__art').evaluate((element) => parseFloat(getComputedStyle(element).borderTopLeftRadius))
     ).toBeGreaterThan(8);
-    const fit = await expectWholeFilmInPanel(page);
-    expect(fit.width).toBeLessThan(fit.boxWidth - 100);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
-    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(2880);
+
+    const computed = await page.evaluate(() => {
+      const v = document.querySelector('.ps-film__video');
+      const film = document.querySelector('.ps-film');
+      const art = document.querySelector('.ps-cinema__art');
+      if (!(v instanceof HTMLElement) || !(film instanceof HTMLElement) || !(art instanceof HTMLElement)) {
+        return null;
+      }
+      return {
+        objectFit: getComputedStyle(v).objectFit,
+        objectPosition: getComputedStyle(v).objectPosition,
+        videoW: v.clientWidth,
+        videoH: v.clientHeight,
+        artW: art.getBoundingClientRect().width,
+        artH: art.getBoundingClientRect().height,
+        filmBg: getComputedStyle(film).backgroundImage.slice(0, 60),
+        scrollWDelta: document.documentElement.scrollWidth - window.innerWidth,
+        scrollH: document.documentElement.scrollHeight
+      };
+    });
+    expect(computed).not.toBeNull();
+    expect(computed?.objectFit).toBe('cover');
+    // Rendered media sizes can sit a hair under the CSS box due to sub-pixel rounding.
+    expect(computed?.videoW).toBeGreaterThanOrEqual((computed?.artW ?? 0) - 2);
+    expect(computed?.videoH).toBeGreaterThanOrEqual((computed?.artH ?? 0) - 2);
+    expect(computed?.scrollWDelta).toBe(0);
+    expect(computed?.scrollH).toBeGreaterThan(2880);
   });
 });
 
 test.describe('phone portrait', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test('plays the whole film without horizontal overflow', async ({ page }) => {
+  test('fills the framed panel without horizontal overflow', async ({ page }) => {
     await openHero(page);
     await expect(page.locator('.ps-cinema__chapter--1 .ps-hero__actions')).toBeVisible();
     await expect(page.locator('a[href="/auth/login"], a[href="/auth/register"]')).toHaveCount(0);
@@ -217,6 +238,32 @@ test.describe('short phone landscape', () => {
     await openHero(page);
     await expect.poll(() => currentTime(page), { timeout: 20_000 }).toBeGreaterThan(0.5);
 
+    const art = await page.locator('.ps-cinema__art').boundingBox();
+    expect(art).not.toBeNull();
+    const computed = await page.evaluate(() => {
+      const v = document.querySelector('.ps-film__video');
+      const film = document.querySelector('.ps-film');
+      const art = document.querySelector('.ps-cinema__art');
+      if (!(v instanceof HTMLElement) || !(art instanceof HTMLElement)) return null;
+      const r = v.getBoundingClientRect();
+      const ar = art.getBoundingClientRect();
+      return {
+        objectFit: getComputedStyle(v).objectFit,
+        objectPosition: getComputedStyle(v).objectPosition,
+        videoW: r.width,
+        videoH: r.height,
+        artW: ar.width,
+        artH: ar.height,
+        scrollWDelta: document.documentElement.scrollWidth - window.innerWidth
+      };
+    });
+    expect(computed).not.toBeNull();
+    expect(computed?.objectFit).toBe('cover');
+    // On this short landscape viewport the film should still fill the panel area.
+    expect(computed?.videoW).toBeGreaterThanOrEqual((computed?.artW ?? 0) - 2);
+    expect(computed?.videoH).toBeGreaterThanOrEqual((computed?.artH ?? 0) - 2);
+    expect(computed?.scrollWDelta).toBe(0);
+
     const actions = page.locator('.ps-cinema__chapter--1 .ps-hero__actions');
     await expect(actions).toBeVisible();
     await expect
@@ -229,6 +276,15 @@ test.describe('short phone landscape', () => {
       )
       .toBeLessThanOrEqual(375);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
+  });
+
+  test('short landscape phone uses the landscape crop preset', async ({ page }) => {
+    await openHero(page);
+    await expect.poll(() => currentTime(page), { timeout: 20_000 }).toBeGreaterThan(0.5);
+    const position = await page.locator('.ps-film__video').evaluate((element) =>
+      getComputedStyle(element).objectPosition
+    );
+    expect(position).toContain('22%');
   });
 });
 

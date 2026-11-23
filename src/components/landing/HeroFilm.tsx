@@ -5,6 +5,9 @@ import { useEffect, useRef } from 'react';
 const FILM_SRC = '/api/hero-film?v=4';
 const POSTER_SRC = '/hero/pataspace-city-poster.jpg';
 
+/** The poster is full-bleed behind the film; the film fills the panel. */
+const POSTER_ASPECT = 720 / 1280;
+
 /** How far down the page counts as having left the top. */
 const TOP_RETURN_OFFSET = 24;
 
